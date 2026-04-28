@@ -13,7 +13,19 @@
     { "path": "pages/manage/item",  "style": { "navigationBarTitleText": "添加菜谱" } },
     { "path": "pages/request/list", "style": { "navigationBarTitleText": "服务请求" } },
     { "path": "pages/request/detail","style":{ "navigationBarTitleText": "请求详情" } },
-    { "path": "pages/profile/index","style": { "navigationBarTitleText": "我的" } }
+    { "path": "pages/profile/index","style": { "navigationBarTitleText": "我的" } },
+    {
+      "path": "pages/album/index",
+      "style": { "navigationBarTitleText": "情侣相册" }
+    },
+    {
+      "path": "pages/memorial/index",
+      "style": { "navigationBarTitleText": "纪念日" }
+    },
+    {
+      "path": "pages/album/preview",
+      "style": { "navigationStyle": "custom" }
+    }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

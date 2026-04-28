@@ -43,6 +43,21 @@ export const pointsApi = {
   allocate: (data: { amount: number; note?: string }) => request({ url: '/points/allocate', method: 'POST', data }),
 };
 
+export const albumApi = {
+  list: () => request<any[]>({ url: '/album/list' }),
+  uploadBatch: (imageUrls: string[], description?: string) => request({ url: '/album/upload', method: 'POST', data: { imageUrls, description } }),
+  setCover: (id: number) => request({ url: `/album/set-cover/${id}`, method: 'POST' }),
+  remove: (id: number) => request({ url: `/album/${id}`, method: 'DELETE' })
+};
+
+export const memorialApi = {
+  list: () => request<any[]>({ url: '/memorial/list' }),
+  add: (data: any) => request({ url: '/memorial/add', method: 'POST', data }),
+  update: (data: any) => request({ url: '/memorial/update', method: 'PUT', data }),
+  remove: (id: number) => request({ url: `/memorial/${id}`, method: 'DELETE' }),
+  getMainMemorial: () => request<any>({ url: '/memorial/main' })
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID

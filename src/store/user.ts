@@ -13,6 +13,7 @@ interface UserState {
   bound: boolean;
   partner: any;
   coupleInfo: any;
+  mainMemorial: any;
 }
 
 export const useUserStore = defineStore('user', {
@@ -22,6 +23,7 @@ export const useUserStore = defineStore('user', {
     bound: uni.getStorageSync('bound') || false,
     partner: uni.getStorageSync('partner') || null,
     coupleInfo: uni.getStorageSync('coupleInfo') || null,
+    mainMemorial: uni.getStorageSync('mainMemorial') || null,
   }),
   actions: {
     setLogin(token: string, user: UserInfo, bound: boolean) {
@@ -39,6 +41,10 @@ export const useUserStore = defineStore('user', {
     setCoupleInfo(couple: any) {
       this.coupleInfo = couple;
       uni.setStorageSync('coupleInfo', couple);
+    },
+    setMainMemorial(memorial: any) {
+      this.mainMemorial = memorial;
+      uni.setStorageSync('mainMemorial', memorial);
     },
     restore() {
       this.token = uni.getStorageSync('token') || '';

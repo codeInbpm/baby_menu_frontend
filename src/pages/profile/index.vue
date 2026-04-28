@@ -1,6 +1,6 @@
 <template>
   <view class="page">
-    <view class="profile-card">
+    <view class="profile-card" :style="profileCardStyle">
       <image class="avatar" :src="user.info?.avatar || '/static/love.png'" mode="aspectFill" />
       <view class="info">
         <view class="name">
@@ -12,6 +12,15 @@
           已绑定 ❤️ {{ user.partner?.nickname || '宝贝' }}
         </view>
         <view v-else class="unbound">尚未绑定伴侣</view>
+      </view>
+
+      <!-- 在一起徽章 -->
+      <view v-if="user.bound && mainMemorialInfo" class="together-badge">
+        <text class="label">{{ mainMemorialInfo.text }}</text>
+        <view class="days-wrap">
+          <text class="num">{{ mainMemorialInfo.days }}</text>
+          <text class="unit">天</text>
+        </view>
       </view>
     </view>
 
@@ -30,6 +39,26 @@
     
     <!-- 主人专属卡片 (Owner可见，给Pet发积分) -->
     <OwnerCard v-if="user.bound && user.info?.roleInCouple === 'owner'" />
+
+    <!-- 浪漫相册 & 纪念日 双网格 -->
+    <view class="romance-grid" v-if="user.bound">
+      <view class="grid-item album" @click="goAlbum" :style="albumCoverStyle">
+        <view class="overlay"></view>
+        <view class="content">
+          <text class="icon">📸</text>
+          <text class="title">情侣相册</text>
+          <text class="sub-title">我们的回忆</text>
+        </view>
+      </view>
+      <view class="grid-item memorial" @click="goMemorial">
+        <view class="overlay"></view>
+        <view class="content">
+          <text class="icon">🗓️</text>
+          <text class="title">纪念日</text>
+          <text class="sub-title">每个重要日子</text>
+        </view>
+      </view>
+    </view>
 
     <!-- 积分记录 (双方都可见，因为都能收到分配) -->
     <PointsRecord v-if="user.bound" />
@@ -55,12 +84,83 @@ import { usePointsStore } from '@/store/points';
 import PointsCard from './PointsCard.vue';
 import OwnerCard from './OwnerCard.vue';
 import PointsRecord from './PointsRecord.vue';
+import dayjs from 'dayjs';
+import { Lunar } from 'lunar-javascript';
 
 const user = useUserStore();
 const pointsStore = usePointsStore();
 
+const mainMemorialInfo = computed(() => {
+  const item = user.mainMemorial;
+  if (!item) return null;
+  
+  const today = dayjs().startOf('day');
+  let originalSolarDate = dayjs(item.memorialDate).startOf('day');
+  let lunarInfo: any = null;
+
+  if (item.calendarType === 1) {
+    const [y, m, d] = item.memorialDate.split('-').map(Number);
+    const lunar = Lunar.fromYmd(y, m, d);
+    const solar = lunar.getSolar();
+    originalSolarDate = dayjs(`${solar.getYear()}-${solar.getMonth()}-${solar.getDay()}`).startOf('day');
+    lunarInfo = { y, m, d };
+  }
+
+  if (item.recordType === 1) {
+    const days = today.diff(originalSolarDate, 'day');
+    return {
+      text: `${item.title}已有`,
+      days: Math.max(0, days)
+    };
+  } else {
+    let nextSolarDate = originalSolarDate;
+    if (item.isAnnualRemind) {
+      if (item.calendarType === 1 && lunarInfo) {
+        const thisYearLunar = Lunar.fromYmd(today.year(), lunarInfo.m, lunarInfo.d);
+        const thisYearSolar = thisYearLunar.getSolar();
+        let candidate = dayjs(`${thisYearSolar.getYear()}-${thisYearSolar.getMonth()}-${thisYearSolar.getDay()}`).startOf('day');
+        if (candidate.isBefore(today)) {
+          const nextYearLunar = Lunar.fromYmd(today.year() + 1, lunarInfo.m, lunarInfo.d);
+          const nextYearSolar = nextYearLunar.getSolar();
+          candidate = dayjs(`${nextYearSolar.getYear()}-${nextYearSolar.getMonth()}-${nextYearSolar.getDay()}`).startOf('day');
+        }
+        nextSolarDate = candidate;
+      } else {
+        nextSolarDate = originalSolarDate.year(today.year());
+        if (nextSolarDate.isBefore(today)) {
+          nextSolarDate = nextSolarDate.add(1, 'year');
+        }
+      }
+    }
+    const days = nextSolarDate.diff(today, 'day');
+    return {
+      text: `${item.title}还有`,
+      days: Math.max(0, days)
+    };
+  }
+});
+
+// Force hot reload
+console.log('Profile page loaded');
+
 const hasPendingSwitch = computed(() => user.coupleInfo && user.coupleInfo.switchRolePending);
 const isApplicant = computed(() => user.coupleInfo && user.info && user.coupleInfo.switchRoleApplicant === user.info.id);
+
+const profileCardStyle = computed(() => {
+  // 可以根据是否有纪念日/相册更换背景
+  return {};
+});
+
+const albumCoverStyle = computed(() => {
+  if (user.coupleInfo && user.coupleInfo.albumCoverUrl) {
+    return {
+      backgroundImage: `url(${user.coupleInfo.albumCoverUrl})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center'
+    };
+  }
+  return {};
+});
 
 async function load() {
   try {
@@ -70,6 +170,9 @@ async function load() {
     if (me.couple) {
       user.setCoupleInfo(me.couple);
     }
+    if (me.mainMemorial !== undefined) {
+      user.setMainMemorial(me.mainMemorial);
+    }
     if (me.bound) {
       pointsStore.fetchInfo();
       pointsStore.fetchTransactions();
@@ -78,13 +181,15 @@ async function load() {
 }
 onShow(load);
 
+function goAlbum() { uni.navigateTo({ url: '/pages/album/index' }); }
+function goMemorial() { uni.navigateTo({ url: '/pages/memorial/index' }); }
+
 async function requestSwitchRole() {
   uni.showModal({
     title: '角色互换',
     content: '想要和TA互换主人与宠物的身份吗？',
     success: async (r) => {
       if (r.confirm) {
-        // 请求订阅消息权限，以便未来能收到对方同意的通知
         uni.requestSubscribeMessage({
           tmplIds: [SUBSCRIBE_TEMPLATE_ID],
           complete: async () => {
@@ -104,7 +209,6 @@ async function requestSwitchRole() {
 }
 
 async function acceptSwitch() {
-  // 请求订阅消息权限
   uni.requestSubscribeMessage({
     tmplIds: [SUBSCRIBE_TEMPLATE_ID],
     complete: async () => {
@@ -130,12 +234,9 @@ function onUnbind() {
       if (r.confirm) {
         await coupleApi.unbind();
         uni.showToast({ title: '已解绑', icon: 'success' });
-        
-        // 清理本地状态
         user.setLogin(user.token, { ...user.info, coupleId: null, roleInCouple: null }, false);
         user.setPartner(null);
         user.setCoupleInfo(null);
-        
         setTimeout(() => uni.reLaunch({ url: '/pages/bind/index' }), 600);
       }
     }
@@ -150,21 +251,26 @@ function onLogout() {
 <style lang="scss" scoped>
 .page { 
   min-height: 100vh;
-  background: #fdfdfd;
+  background: #fcf8fa;
   padding: 32rpx 0; 
+  padding-bottom: 60rpx;
 }
 .profile-card {
   margin: 0 32rpx 32rpx;
-  background: linear-gradient(135deg, #FFE0EC, #FFD6E5);
-  border-radius: 32rpx;
+  background: linear-gradient(135deg, #FFB6C1, #FF8DA1);
+  border-radius: 36rpx;
   padding: 40rpx 32rpx;
   display: flex; align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10rpx 30rpx rgba(255, 141, 161, 0.25);
 }
-.avatar { width: 120rpx; height: 120rpx; border-radius: 50%; border: 4rpx solid #fff; }
-.info { margin-left: 24rpx; }
+.avatar { width: 120rpx; height: 120rpx; border-radius: 50%; border: 4rpx solid #fff; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1); }
+.info { margin-left: 24rpx; flex: 1; }
 .name { 
   font-size: 36rpx; font-weight: 700; color: #fff; 
   display: flex; align-items: center; gap: 12rpx;
+  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
 }
 .role-badge {
   font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 8rpx;
@@ -173,8 +279,21 @@ function onLogout() {
 .role-badge.owner { background: rgba(255,255,255,0.3); }
 .role-badge.pet { background: #FF6699; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1); }
 
-.bound { font-size: 24rpx; color: #fff; margin-top: 12rpx; opacity: .9; }
+.bound { font-size: 24rpx; color: #fff; margin-top: 12rpx; opacity: .95; }
 .unbound { font-size: 24rpx; color: #fff; margin-top: 12rpx; opacity: .85; }
+
+.together-badge {
+  position: absolute; right: 32rpx; top: 32rpx;
+  display: flex; flex-direction: column; align-items: flex-end;
+  color: #fff;
+  text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1);
+  .label { font-size: 22rpx; opacity: 0.9; font-weight: 500; }
+  .days-wrap { 
+    display: flex; align-items: baseline; margin-top: -4rpx;
+    .num { font-size: 60rpx; font-weight: 900; line-height: 1; font-style: italic; }
+    .unit { font-size: 24rpx; margin-left: 4rpx; opacity: 0.9; }
+  }
+}
 
 .switch-notify {
   margin: 0 32rpx 32rpx; background: #fff; border-radius: 24rpx;
@@ -193,15 +312,52 @@ function onLogout() {
   box-shadow: 0 6rpx 16rpx rgba(255,20,147,0.3);
 }
 
+.romance-grid {
+  margin: 0 32rpx 32rpx;
+  display: flex;
+  gap: 20rpx;
+}
+.grid-item {
+  flex: 1;
+  height: 180rpx;
+  border-radius: 28rpx;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  background-size: cover;
+  background-position: center;
+}
+.grid-item.album {
+  background-color: #ffe6f0;
+}
+.grid-item.memorial {
+  background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+}
+.grid-item .overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.15); z-index: 1;
+}
+.grid-item.memorial .overlay { background: rgba(255,255,255,0.2); }
+
+.grid-item .content {
+  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; color: #fff;
+}
+.grid-item.memorial .content { color: #8E24AA; }
+
+.grid-item .icon { font-size: 48rpx; margin-bottom: 8rpx; filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.1)); }
+.grid-item .title { font-size: 30rpx; font-weight: 700; text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1); }
+.grid-item.memorial .title { text-shadow: none; }
+.grid-item .sub-title { font-size: 22rpx; opacity: 0.9; margin-top: 4rpx; }
+
 .menu { 
   margin: 0 32rpx;
   background: #fff; border-radius: 24rpx; overflow: hidden; 
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.03);
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.04);
 }
 .row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 32rpx; font-size: 28rpx; color: #333;
-  border-bottom: 1rpx solid #f5f5f5;
+  border-bottom: 1rpx solid #f9f9f9;
 }
 .row:last-child { border-bottom: none; }
 .row.disabled { color: #aaa; }

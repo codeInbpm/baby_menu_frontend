@@ -4,8 +4,8 @@
       <text class="icon">📝</text> 最近积分记录
     </view>
     
-    <view class="record-list" v-if="isValidArray(pointsStore.transactions)">
-      <view class="record-item" v-for="item in pointsStore.transactions" :key="item.id">
+    <view class="record-list" v-if="isValidArray(displayList)">
+      <view class="record-item" v-for="item in displayList" :key="item.id">
         <view class="left">
           <view class="time">{{ formatTime(item.createTime) }}</view>
           <view class="note" v-if="item.note">{{ item.note }}</view>
@@ -17,6 +17,11 @@
           </view>
         </view>
       </view>
+      
+      <view class="more-btn" v-if="hasMore" @click="goFullRecords">
+        <text>查看更多明细</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
     
     <view class="empty-state" v-else>
@@ -26,9 +31,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { usePointsStore } from '@/store/points';
 
 const pointsStore = usePointsStore();
+
+const displayList = computed(() => {
+  return pointsStore.transactions.slice(0, 3);
+});
+
+const hasMore = computed(() => {
+  return pointsStore.transactions.length > 3;
+});
 
 function isValidArray(arr: any) {
   return Array.isArray(arr) && arr.length > 0;
@@ -36,7 +50,6 @@ function isValidArray(arr: any) {
 
 function formatTime(str: string) {
   if (!str) return '';
-  // expected "YYYY-MM-DDTHH:mm:ss" or similar
   const d = new Date(str.replace(/-/g, '/').replace('T', ' '));
   if (isNaN(d.getTime())) return str;
   const y = d.getFullYear();
@@ -51,16 +64,24 @@ function getTypeText(type: string) {
   const map: Record<string, string> = {
     'request_deduct': '请求扣除',
     'allocate': '收到分配',
-    'daily_reset': '每日重置'
+    'allocate_out': '发红包',
+    'daily_reset': '每日重置',
+    'monthly_reset': '月初重置',
+    'request_refund': '积分退回'
   };
   return map[type] || '其他';
 }
 
 function getAmountText(type: string, amount: number) {
-  if (type === 'request_deduct') return `-${amount}`;
-  if (type === 'allocate') return `+${amount}`;
-  if (type === 'daily_reset') return '重置';
+  if (type === 'request_deduct' || type === 'allocate_out') return `-${amount}`;
+  if (type === 'allocate' || type === 'request_refund') return `+${amount}`;
+  if (type === 'daily_reset' || type === 'monthly_reset') return '重置';
   return `${amount}`;
+}
+
+function goFullRecords() {
+  uni.showToast({ title: '完整记录即将上线', icon: 'none' });
+  // TODO: implement full records page
 }
 </script>
 
@@ -133,5 +154,13 @@ function getAmountText(type: string, amount: number) {
   font-size: 26rpx;
   background: #fff;
   border-radius: 24rpx;
+}
+
+.more-btn {
+  display: flex; justify-content: center; align-items: center;
+  padding-top: 24rpx;
+  border-top: 2rpx dashed #f0f0f0;
+  font-size: 24rpx; color: #FF6FA0;
+  .arrow { margin-left: 8rpx; font-size: 28rpx; }
 }
 </style>
