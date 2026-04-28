@@ -26,9 +26,24 @@
     "selectedColor": "#FF6FA0",
     "backgroundColor": "#fff",
     "list": [
-      { "pagePath": "pages/menu/index",    "text": "菜单" },
-      { "pagePath": "pages/request/list",  "text": "请求" },
-      { "pagePath": "pages/profile/index", "text": "我的" }
+      {
+        "pagePath": "pages/menu/index",
+        "text": "菜单",
+        "iconPath": "static/tabbar/menu.png",
+        "selectedIconPath": "static/tabbar/menu-active.png"
+      },
+      {
+        "pagePath": "pages/request/list",
+        "text": "请求",
+        "iconPath": "static/tabbar/request.png",
+        "selectedIconPath": "static/tabbar/request-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/tabbar/my.png",
+        "selectedIconPath": "static/tabbar/my-active.png"
+      }
     ]
   }
 }

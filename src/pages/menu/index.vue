@@ -1,70 +1,75 @@
 <template>
   <view class="menu-page">
-    <!-- 顶部 -->
-    <view class="topbar">
-      <view class="user">
-        <image class="avatar" :src="coupleAvatar" mode="aspectFill" />
-        <view class="title-block">
-          <view class="title">宝贝的专属菜单</view>
-          <view class="subtitle">全都是你的最爱 💜</view>
-        </view>
-      </view>
-      <view class="topbar-right">
-        <view class="icon-btn" @click="goRequests">
-          <text class="iconfont">⌗</text>
-        </view>
-        <view class="icon-btn" @click="goManage">
-          <text class="iconfont">🛍️</text>
-        </view>
-      </view>
-    </view>
+    <!-- 沉浸式背景图 -->
+    <image class="bg-img" :src="'/static/bg.png'" mode="aspectFill" />
 
-    <!-- 第二行：当前分类标签 + 管理菜谱 + 添加菜谱 + 搜索 -->
-    <view class="cat-bar">
-      <view class="cur-cat">{{ currentCategoryName }}</view>
-      <view class="actions">
-        <view class="pill outline" @click="goManage">管理菜谱</view>
-        <view class="pill outline" @click="goAddItem">+ 添加菜谱</view>
-        <view class="search">
-          <text class="search-icon">🔍</text>
-          <input class="search-input" v-model="keyword" placeholder="搜索" />
-        </view>
-      </view>
-    </view>
-
-    <view class="body">
-      <!-- 左侧分类 -->
-      <scroll-view class="side" scroll-y>
-        <view
-          v-for="c in categories"
-          :key="c.id"
-          class="side-item"
-          :class="{ active: c.id === currentCategoryId }"
-          @click="onCategory(c)"
-        >
-          {{ c.name }} {{ c.icon || '' }}
-        </view>
-      </scroll-view>
-
-      <!-- 右侧菜单项 -->
-      <scroll-view class="content" scroll-y>
-        <view class="content-title">{{ currentCategoryTitle }}</view>
-        <view v-for="it in filteredItems" :key="it.id" class="dish-card">
-          <image class="dish-img" :src="it.imageUrl || defaultImg" mode="aspectFill" />
-          <view class="dish-info">
-            <view class="dish-name">{{ it.name }}</view>
-            <view v-if="it.duration" class="duration-tag">{{ it.duration }} 分钟</view>
+    <view class="main-content">
+      <!-- 顶部 -->
+      <view class="topbar">
+        <view class="user">
+          <image class="avatar" :src="coupleAvatar" mode="aspectFill" />
+          <view class="title-block">
+            <view class="title">宝贝的专属菜单</view>
+            <view class="subtitle">全都是你的最爱 💜</view>
           </view>
+        </view>
+        <view class="topbar-right">
+          <view class="icon-btn" @click="goRequests">
+            <text class="iconfont">⌗</text>
+          </view>
+          <view class="icon-btn" @click="goManage">
+            <text class="iconfont">🛍️</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 第二行：当前分类标签 + 管理菜谱 + 添加菜谱 + 搜索 -->
+      <view class="cat-bar">
+        <view class="cur-cat">{{ currentCategoryName }}</view>
+        <view class="actions">
+          <view class="pill outline" @click="goManage">管理菜谱</view>
+          <view class="pill outline" @click="goAddItem">+ 添加菜谱</view>
+          <view class="search">
+            <text class="search-icon">🔍</text>
+            <input class="search-input" v-model="keyword" placeholder="搜索" />
+          </view>
+        </view>
+      </view>
+
+      <view class="body">
+        <!-- 左侧分类 -->
+        <scroll-view class="side" scroll-y>
           <view
-            class="add-btn"
-            :class="{ added: cart.has(it.id) }"
-            @click="cart.toggle({ id: it.id, name: it.name, imageUrl: it.imageUrl })"
+            v-for="c in categories"
+            :key="c.id"
+            class="side-item"
+            :class="{ active: c.id === currentCategoryId }"
+            @click="onCategory(c)"
           >
-            <text>{{ cart.has(it.id) ? '✓' : '+' }}</text>
+            {{ c.name }} {{ c.icon || '' }}
           </view>
-        </view>
-        <view v-if="!filteredItems.length" class="empty">这个分类还没有菜单，点右上角「添加菜谱」～</view>
-      </scroll-view>
+        </scroll-view>
+
+        <!-- 右侧菜单项 -->
+        <scroll-view class="content" scroll-y>
+          <view class="content-title">{{ currentCategoryTitle }}</view>
+          <view v-for="it in filteredItems" :key="it.id" class="dish-card">
+            <image class="dish-img" :src="it.imageUrl || defaultImg" mode="aspectFill" />
+            <view class="dish-info">
+              <view class="dish-name">{{ it.name }}</view>
+              <view v-if="it.duration" class="duration-tag">{{ it.duration }} 分钟</view>
+            </view>
+            <view
+              class="add-btn"
+              :class="{ added: cart.has(it.id) }"
+              @click="cart.toggle({ id: it.id, name: it.name, imageUrl: it.imageUrl })"
+            >
+              <text>{{ cart.has(it.id) ? '✓' : '+' }}</text>
+            </view>
+          </view>
+          <view v-if="!filteredItems.length" class="empty">这个分类还没有菜单，点右上角「添加菜谱」～</view>
+        </scroll-view>
+      </view>
     </view>
 
     <!-- 悬浮购物车 -->
@@ -192,11 +197,38 @@ onMounted(loadAll);
 </script>
 
 <style lang="scss" scoped>
+page {
+  height: 100%;
+}
+
 .menu-page {
-  min-height: 100vh;
+  height: 100vh;
+  position: relative;
+  background: #FFF5F8; /* 底部托底色，如果需要可以改为白色 */
+}
+
+/* 沉浸式背景图 */
+.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 480rpx;
+  z-index: 0;
+}
+
+/* 主内容区域，通过圆角盖在背景图上方 */
+.main-content {
+  position: relative;
+  z-index: 1;
+  /* 留出上方的空间给背景图展示，动态结合状态栏高度 */
+  margin-top: calc(240rpx + var(--status-bar-height));
   background: #FFF5F8;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: 120rpx;
+  border-radius: 40rpx 40rpx 0 0;
+  height: calc(100vh - 240rpx - var(--status-bar-height));
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4rpx 16rpx rgba(255, 111, 160, 0.08); /* 稍微加一点阴影过渡 */
 }
 
 /* ===== topbar ===== */
@@ -204,7 +236,7 @@ onMounted(loadAll);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx 28rpx 8rpx;
+  padding: 32rpx 28rpx 16rpx;
 }
 .user { display: flex; align-items: center; }
 .avatar {
@@ -228,7 +260,7 @@ onMounted(loadAll);
 /* ===== cat-bar ===== */
 .cat-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20rpx 28rpx;
+  padding: 10rpx 28rpx 20rpx;
 }
 .cur-cat {
   font-size: 28rpx; color: #555; font-weight: 600;
@@ -248,8 +280,9 @@ onMounted(loadAll);
 
 /* ===== body ===== */
 .body {
+  flex: 1;
   display: flex; padding: 0 0 0 28rpx;
-  height: calc(100vh - 230rpx);
+  overflow: hidden; /* 让里面的 scroll-view 独立滚动 */
 }
 
 .side {
