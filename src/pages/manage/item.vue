@@ -17,7 +17,7 @@
     </view>
 
     <view class="form-row">
-      <view class="label">图片</view>
+      <view class="label">图片(更新)</view>
       <view class="img-box" @click="onChooseImage">
         <image v-if="form.imageUrl" class="preview" :src="form.imageUrl" mode="aspectFill" />
         <text v-else class="img-plus">+</text>
@@ -95,8 +95,13 @@ function onChooseImage() {
         success: (r) => {
           try {
             const body = JSON.parse(r.data);
-            if (body.code === 0) form.value.imageUrl = BASE_URL.replace('/api', '') + body.data.url;
-            else uni.showToast({ title: body.message, icon: 'none' });
+            if (body.code === 0) {
+              const url = body.data.url;
+              form.value.imageUrl = url.startsWith('http') ? url : BASE_URL.replace('/api', '') + url;
+              console.log('--- image url set to ---', form.value.imageUrl);
+            } else {
+              uni.showToast({ title: body.message, icon: 'none' });
+            }
           } catch { uni.showToast({ title: '上传异常', icon: 'none' }); }
         },
       });
