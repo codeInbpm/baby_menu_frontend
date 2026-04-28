@@ -18,14 +18,14 @@
     </view>
 
     <!-- 弹窗 -->
-    <view v-if="show" class="mask" @click="show = false">
-      <view class="dialog" @click.stop>
+    <view v-if="show" class="mask" @click="closeDialog">
+      <view class="dialog" @click.stop="() => {}">
         <view class="d-title">{{ form.id ? '编辑分类' : '新建分类' }}</view>
         <input class="d-input" v-model="form.name" placeholder="分类名" />
         <input class="d-input" v-model="form.icon" placeholder="emoji 图标，例如 🍎" />
-        <input class="d-input" v-model.number="form.sort" placeholder="排序" type="number" />
+        <input class="d-input" type="number" v-model="form.sort" placeholder="排序值，数字越小越靠前" />
         <view class="d-actions">
-          <view class="d-btn ghost" @click="show = false">取消</view>
+          <view class="d-btn ghost" @click="closeDialog">取消</view>
           <view class="d-btn primary" @click="onSave">保存</view>
         </view>
       </view>
@@ -45,6 +45,10 @@ async function load() { list.value = await menuApi.categories(); }
 
 function onAdd() { form.value = { name: '', icon: '', sort: 99 }; show.value = true; }
 function onEdit(c: any) { form.value = { ...c }; show.value = true; }
+
+function closeDialog() {
+  show.value = false;
+}
 
 async function onSave() {
   if (!form.value.name) { uni.showToast({ title: '请输入分类名', icon: 'none' }); return; }

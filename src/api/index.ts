@@ -15,6 +15,8 @@ export const coupleApi = {
   invite:  () => request<{ code: string }>({ url: '/couple/invite', method: 'POST' }),
   bind:    (inviteCode: string) => request({ url: '/couple/bind', method: 'POST', data: { inviteCode } }),
   unbind:  () => request({ url: '/couple/unbind', method: 'POST' }),
+  switchRoleRequest: () => request({ url: '/couple/switch-role/request', method: 'POST' }),
+  switchRoleAccept: () => request({ url: '/couple/switch-role/accept', method: 'POST' }),
 };
 
 export const menuApi = {
@@ -33,6 +35,12 @@ export const requestApi = {
   accept: (id: number)        => request({ url: `/request/${id}/accept`, method: 'POST' }),
   reject: (id: number)        => request({ url: `/request/${id}/reject`, method: 'POST' }),
   finish: (id: number)        => request({ url: `/request/${id}/finish`, method: 'POST' }),
+};
+
+export const pointsApi = {
+  info: () => request<any>({ url: '/points/info' }),
+  transactions: () => request<any[]>({ url: '/points/transactions' }),
+  allocate: (data: { amount: number; note?: string }) => request({ url: '/points/allocate', method: 'POST', data }),
 };
 
 // 微信订阅消息模板 ID

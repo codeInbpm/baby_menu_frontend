@@ -60,6 +60,7 @@
               <view v-if="it.duration" class="duration-tag">{{ it.duration }} 分钟</view>
             </view>
             <view
+              v-if="isPet"
               class="add-btn"
               :class="{ added: cart.has(it.id) }"
               @click="cart.toggle({ id: it.id, name: it.name, imageUrl: it.imageUrl })"
@@ -73,21 +74,26 @@
     </view>
 
     <!-- 悬浮购物车 -->
-    <view class="cart-fab" @click="onCartTap">
+    <view v-if="isPet" class="cart-fab" @click="onCartTap">
       <text class="cart-icon">🛒</text>
       <view v-if="cart.count" class="badge">{{ cart.count }}</view>
     </view>
+    
+    <!-- 主人提示灯 -->
+    <view v-if="!isPet" class="owner-hint">
+       专属管家，请等待小宝贝点单哦～
+    </view>
 
     <!-- 通知宝贝 弹窗 -->
-    <view v-if="confirmShow" class="modal-mask" @click="confirmShow = false">
-      <view class="modal" @click.stop>
+    <view v-if="confirmShow" class="modal-mask" @click="closeConfirm">
+      <view class="modal" @click.stop="() => {}">
         <view class="modal-title">通知宝贝？</view>
         <view class="modal-body">
           <view v-for="i in cart.items" :key="i.id" class="modal-row">· {{ i.name }}</view>
         </view>
-        <view class="modal-actions">
-          <view class="modal-btn ghost" @click="confirmShow = false">再想想</view>
-          <view class="modal-btn primary" @click="sendRequest">通知宝贝 ❤️</view>
+        <view class="modal-footer">
+          <view class="modal-btn ghost" @click="closeConfirm">再想想</view>
+          <view class="modal-btn primary" @click="sendRequest">马上通知！</view>
         </view>
       </view>
     </view>
@@ -111,6 +117,7 @@ const confirmShow = ref(false);
 
 const defaultImg = '/static/dish_placeholder.png';
 const coupleAvatar = computed(() => user.info?.avatar || '/static/love.png');
+const isPet = computed(() => user.info?.roleInCouple === 'pet');
 
 const currentCategoryName = computed(() => {
   const c = categories.value.find((x) => x.id === currentCategoryId.value);
@@ -162,6 +169,10 @@ function onCartTap() {
     return;
   }
   confirmShow.value = true;
+}
+
+function closeConfirm() {
+  confirmShow.value = false;
 }
 
 async function sendRequest() {
@@ -352,20 +363,24 @@ page {
 
 /* ===== floating cart ===== */
 .cart-fab {
-  position: fixed;
-  left: 32rpx; bottom: 60rpx;
-  width: 96rpx; height: 96rpx; border-radius: 50%;
-  background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, .12);
+  position: fixed; bottom: 60rpx; right: 40rpx;
+  width: 110rpx; height: 110rpx; background: linear-gradient(135deg, #FF69B4, #FF1493);
+  border-radius: 55rpx; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(255,20,147,0.4); z-index: 100;
 }
-.cart-icon { font-size: 40rpx; }
-.badge {
-  position: absolute; top: -4rpx; right: -4rpx;
-  min-width: 32rpx; height: 32rpx; border-radius: 16rpx;
-  background: #FF6FA0; color: #fff; font-size: 20rpx;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 8rpx;
+.cart-icon { font-size: 50rpx; }
+.cart-fab .badge {
+  position: absolute; top: -6rpx; right: -6rpx; background: #ff3b30; color: #fff;
+  font-size: 22rpx; min-width: 32rpx; height: 32rpx; border-radius: 16rpx;
+  display: flex; align-items: center; justify-content: center; font-weight: bold;
+}
+
+.owner-hint {
+  position: fixed; bottom: 60rpx; left: 50%; transform: translateX(-50%);
+  background: rgba(255,105,180, 0.9); color: #fff;
+  padding: 16rpx 40rpx; border-radius: 999rpx;
+  font-size: 26rpx; box-shadow: 0 8rpx 24rpx rgba(255,105,180,0.3);
+  z-index: 100; white-space: nowrap;
 }
 
 /* ===== modal ===== */
