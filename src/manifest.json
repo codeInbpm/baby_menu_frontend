@@ -1,0 +1,25 @@
+{
+  "name": "宝贝的专属菜单",
+  "appid": "wx1c561db3650f9e3d",
+  "description": "情侣专属浪漫互动小程序",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "mp-weixin": {
+    "appid": "wx1c561db3650f9e3d",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true
+    },
+    "usingComponents": true,
+    "permission": {},
+    "requiredPrivateInfos": []
+  },
+  "h5": {
+    "title": "宝贝的专属菜单",
+    "router": { "mode": "hash" },
+    "devServer": { "port": 5173, "https": false }
+  },
+  "vueVersion": "3"
+}

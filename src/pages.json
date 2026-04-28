@@ -1,0 +1,34 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^wd-(.*)": "wot-design-uni/components/wd-$1/wd-$1.vue"
+    }
+  },
+  "pages": [
+    { "path": "pages/login/index",  "style": { "navigationStyle": "custom" } },
+    { "path": "pages/bind/index",   "style": { "navigationBarTitleText": "绑定伴侣" } },
+    { "path": "pages/menu/index",   "style": { "navigationStyle": "custom" } },
+    { "path": "pages/manage/category", "style": { "navigationBarTitleText": "管理菜谱" } },
+    { "path": "pages/manage/item",  "style": { "navigationBarTitleText": "添加菜谱" } },
+    { "path": "pages/request/list", "style": { "navigationBarTitleText": "服务请求" } },
+    { "path": "pages/request/detail","style":{ "navigationBarTitleText": "请求详情" } },
+    { "path": "pages/profile/index","style": { "navigationBarTitleText": "我的" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#FFF5F8",
+    "backgroundColor": "#FFF5F8",
+    "navigationBarTitleText": "宝贝的专属菜单"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#FF6FA0",
+    "backgroundColor": "#fff",
+    "list": [
+      { "pagePath": "pages/menu/index",    "text": "菜单" },
+      { "pagePath": "pages/request/list",  "text": "请求" },
+      { "pagePath": "pages/profile/index", "text": "我的" }
+    ]
+  }
+}
