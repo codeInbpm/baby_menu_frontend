@@ -64,6 +64,13 @@ export const reportApi = {
   overview: (type: string = 'month') => request<any>({ url: `/report/overview`, params: { type } }),
 };
 
+export const footprintApi = {
+  list: () => request<any[]>({ url: '/footprint/list' }),
+  add: (data: any) => request({ url: '/footprint/add', method: 'POST', data }),
+  detail: (id: number) => request<any>({ url: `/footprint/${id}` }),
+  remove: (id: number) => request({ url: `/footprint/${id}`, method: 'DELETE' })
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID

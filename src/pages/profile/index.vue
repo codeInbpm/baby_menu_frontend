@@ -76,6 +76,9 @@
       </view>
     </view>
 
+    <!-- 情侣足迹地图入口 -->
+    <FootprintEntryCard v-if="user.bound" />
+
     <!-- 宠爱报表入口 -->
     <ReportEntryCard v-if="user.bound" />
 
@@ -103,6 +106,7 @@ import PointsCard from './PointsCard.vue';
 import OwnerCard from './OwnerCard.vue';
 import PointsRecord from './PointsRecord.vue';
 import ReportEntryCard from './ReportEntryCard.vue';
+import FootprintEntryCard from './FootprintEntryCard.vue';
 import dayjs from 'dayjs';
 import { Lunar } from 'lunar-javascript';
 

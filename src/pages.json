@@ -29,6 +29,18 @@
     {
       "path": "pages/report/index",
       "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/footprint/index",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/footprint/create",
+      "style": { "navigationBarTitleText": "记录打卡" }
+    },
+    {
+      "path": "pages/footprint/detail",
+      "style": { "navigationBarTitleText": "足迹详情" }
     }
   ],
   "globalStyle": {
