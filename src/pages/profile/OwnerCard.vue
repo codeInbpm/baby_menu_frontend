@@ -12,12 +12,16 @@
       <view class="card-content">
         <view class="label">本月荣誉奖励积分</view>
         <view class="points-display">
-          <text class="num">{{ info?.currentPoints || 0 }}</text>
+          <text class="num">{{ info?.currentPoints ? Number(info.currentPoints) : 0 }}</text>
           <text class="limit">分</text>
         </view>
         
         <view class="hint-text">
           用积攒的荣誉积分给宝贝发红包充值！
+        </view>
+        
+        <view class="reward-stats" v-if="(info?.rewardPoints || 0) > 0">
+          🎉 累计获得专属奖励：<text class="highlight">{{ info?.rewardPoints ? Number(info.rewardPoints) : 0 }}</text> 积分
         </view>
       </view>
     </view>
@@ -165,6 +169,18 @@ async function confirmAllocate() {
   border-radius: 20rpx;
   padding: 12rpx 20rpx;
   margin-top: 14rpx;
+}
+
+.reward-stats {
+  margin-top: 24rpx;
+  font-size: 26rpx;
+  color: #fff;
+  background: rgba(255, 20, 147, 0.2);
+  padding: 12rpx 24rpx;
+  border-radius: 16rpx;
+  display: inline-block;
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  .highlight { font-weight: bold; font-size: 32rpx; color: #FFD700; text-shadow: 0 2rpx 8rpx rgba(255,215,0,0.4); margin: 0 8rpx; }
 }
 
 /* 分配积分按钮 */

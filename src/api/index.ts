@@ -9,6 +9,7 @@ export const authApi = {
 
 export const userApi = {
   me: () => request<{ user: any; partner: any; bound: boolean }>({ url: '/user/me' }),
+  clearUnreadReward: () => request({ url: '/user/clearUnreadReward', method: 'POST' }),
 };
 
 export const coupleApi = {
@@ -35,6 +36,7 @@ export const requestApi = {
   accept: (id: number)        => request({ url: `/request/${id}/accept`, method: 'POST' }),
   reject: (id: number)        => request({ url: `/request/${id}/reject`, method: 'POST' }),
   finish: (id: number)        => request({ url: `/request/${id}/finish`, method: 'POST' }),
+  evaluate: (id: number, data: { score?: number; rewardPoints?: number; feedback?: string }) => request({ url: `/request/${id}/evaluate`, method: 'POST', data }),
 };
 
 export const pointsApi = {

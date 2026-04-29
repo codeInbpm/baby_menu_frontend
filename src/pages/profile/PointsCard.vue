@@ -10,8 +10,8 @@
       <view class="card-content">
         <view class="label">当前宠爱积分</view>
         <view class="points-display">
-          <text class="num">{{ info?.currentPoints || 0 }}</text>
-          <text class="limit">/ {{ info?.dailyLimit || 50 }}</text>
+          <text class="num">{{ info?.currentPoints ? Number(info.currentPoints) : 0 }}</text>
+          <text class="limit">/ {{ info?.dailyLimit ? Number(info.dailyLimit) : 50 }}</text>
         </view>
         
         <view class="progress-bar">
@@ -35,7 +35,7 @@
         <view class="modal-header">奖励专属管家 ✨</view>
         <view class="modal-body">
           <view class="balance-hint">
-            您当前有 <text class="highlight">{{ info?.currentPoints || 0 }}</text> 宠爱积分。<br/>奖励将扣除您的个人余额哦～
+            您当前有 <text class="highlight">{{ info?.currentPoints ? Number(info.currentPoints) : 0 }}</text> 宠爱积分。<br/>奖励将扣除您的个人余额哦～
           </view>
           <view class="input-group">
             <text class="label">要奖励的荣誉积分:</text>

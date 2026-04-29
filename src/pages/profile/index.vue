@@ -1,5 +1,21 @@
 <template>
   <view class="page">
+    <!-- 奖励动画遮罩 -->
+    <view class="reward-overlay" v-if="showRewardAnimation">
+      <!-- 飞行的心 -->
+      <view class="fly-heart" :class="{ 'fly': isFlying }" v-if="!isExploding">💖</view>
+      
+      <!-- 爆炸粒子 -->
+      <view class="explosion" v-if="isExploding">
+        <text v-for="i in 8" :key="i" class="particle" :style="getParticleStyle(i)">❤️</text>
+      </view>
+
+      <!-- 奖励文字 -->
+      <view class="reward-text" :class="{ 'show': isExploding }">
+        宝贝奖励了你 <text class="highlight">+{{ rewardAmount }}</text> 积分 ❤️
+      </view>
+    </view>
+
     <view class="profile-card" :style="profileCardStyle">
       <image class="avatar" :src="user.info?.avatar || '/static/love.png'" mode="aspectFill" />
       <view class="info">
@@ -76,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { coupleApi, userApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useUserStore } from '@/store/user';
@@ -162,6 +178,44 @@ const albumCoverStyle = computed(() => {
   return {};
 });
 
+const showRewardAnimation = ref(false);
+const isFlying = ref(false);
+const isExploding = ref(false);
+const rewardAmount = ref(0);
+
+function getParticleStyle(i: number) {
+  const angle = (i * 45) * (Math.PI / 180);
+  const radius = 120; // 扩散半径 rpx
+  const x = Math.cos(angle) * radius;
+  const y = Math.sin(angle) * radius;
+  return `
+    --tx: ${x}rpx;
+    --ty: ${y}rpx;
+    animation-delay: ${Math.random() * 0.1}s;
+  `;
+}
+
+async function playRewardAnimation(amount: number) {
+  rewardAmount.value = amount;
+  showRewardAnimation.value = true;
+  isFlying.value = false;
+  isExploding.value = false;
+
+  setTimeout(() => { isFlying.value = true; }, 100);
+
+  setTimeout(() => {
+    isExploding.value = true;
+    setTimeout(async () => {
+      showRewardAnimation.value = false;
+      try { await userApi.clearUnreadReward(); } catch {}
+      // Update local store to reflect the cleared status to prevent re-trigger on immediate navigation
+      if (user.info) {
+        user.setLogin(user.token, { ...user.info, hasUnreadReward: 0 }, user.bound);
+      }
+    }, 2500);
+  }, 1100);
+}
+
 async function load() {
   try {
     const me = await userApi.me();
@@ -176,6 +230,11 @@ async function load() {
     if (me.bound) {
       pointsStore.fetchInfo();
       pointsStore.fetchTransactions();
+    }
+    
+    // Check for unread rewards for Owner
+    if (me.user.roleInCouple === 'owner' && me.user.hasUnreadReward > 0) {
+      playRewardAnimation(me.user.hasUnreadReward);
     }
   } catch {}
 }
@@ -364,4 +423,78 @@ function onLogout() {
 .row .badge { font-size: 22rpx; color: #999; background: #f5f5f5; padding: 4rpx 12rpx; border-radius: 999rpx; }
 .row .arrow { color: #ccc; }
 .row.danger { color: #ff5b5b; justify-content: center; }
+
+/* 奖励动画样式 */
+.reward-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  pointer-events: none;
+  display: flex; justify-content: center; align-items: center;
+}
+
+.fly-heart {
+  font-size: 120rpx;
+  position: absolute;
+  top: 60%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.2);
+  opacity: 0;
+  transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+  filter: drop-shadow(0 0 20rpx rgba(255,105,180,0.8));
+  
+  &.fly {
+    opacity: 1;
+    /* 飞向左上角头像，位置大约为 top 110rpx, left 110rpx */
+    transform: translate(calc(-50vw + 110rpx), calc(-60vh + 110rpx)) scale(1.5) rotate(-15deg);
+  }
+}
+
+.explosion {
+  position: absolute;
+  left: 110rpx; top: 110rpx;
+  .particle {
+    position: absolute;
+    font-size: 40rpx;
+    top: -20rpx; left: -20rpx;
+    opacity: 0;
+    animation: explode 0.8s ease-out forwards;
+  }
+}
+
+@keyframes explode {
+  0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(45deg); opacity: 0; }
+}
+
+.reward-text {
+  position: absolute;
+  top: 45%;
+  font-size: 34rpx; font-weight: bold; color: #FF6FA0;
+  opacity: 0;
+  transform: translateY(40rpx);
+  transition: all 0.5s ease-out;
+  background: rgba(255,255,255,0.95);
+  padding: 24rpx 48rpx; border-radius: 999rpx;
+  box-shadow: 0 10rpx 40rpx rgba(255,105,180,0.25);
+  border: 2rpx solid #FFF0F5;
+  
+  &.show {
+    opacity: 1;
+    transform: translateY(0);
+    animation: bounceText 2s infinite;
+  }
+  .highlight { 
+    font-size: 56rpx; color: #FF1493; margin: 0 12rpx; 
+    display: inline-block;
+    animation: pulsePoints 1s infinite alternate;
+  }
+}
+
+@keyframes bounceText {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+@keyframes pulsePoints {
+  0% { transform: scale(1); text-shadow: 0 0 10rpx rgba(255,20,147,0.2); }
+  100% { transform: scale(1.1); text-shadow: 0 0 20rpx rgba(255,20,147,0.6); }
+}
 </style>

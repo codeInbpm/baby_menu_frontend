@@ -67,14 +67,17 @@ function getTypeText(type: string) {
     'allocate_out': '发红包',
     'daily_reset': '每日重置',
     'monthly_reset': '月初重置',
-    'request_refund': '积分退回'
+    'request_refund': '积分退回',
+    'request_income': '服务收益',
+    'reward_received': '获得奖励',
+    'reward_given': '送出奖励'
   };
   return map[type] || '其他';
 }
 
 function getAmountText(type: string, amount: number) {
-  if (type === 'request_deduct' || type === 'allocate_out') return `-${amount}`;
-  if (type === 'allocate' || type === 'request_refund') return `+${amount}`;
+  if (type === 'request_deduct' || type === 'allocate_out' || type === 'reward_given') return `-${amount}`;
+  if (type === 'allocate' || type === 'request_refund' || type === 'reward_received' || type === 'request_income') return `+${amount}`;
   if (type === 'daily_reset' || type === 'monthly_reset') return '重置';
   return `${amount}`;
 }
@@ -134,9 +137,13 @@ function goFullRecords() {
   padding: 4rpx 12rpx;
   border-radius: 8rpx;
   margin-bottom: 8rpx;
-  &.request_deduct { background: #FFF0F0; color: #FF4D4F; }
   &.allocate { background: #F0F9EB; color: #1FCB6A; }
-  &.daily_reset { background: #f4f4f4; color: #999; }
+  &.allocate_out { background: #FFF0F0; color: #FF4D4F; }
+  &.request_refund { background: #E6F7FF; color: #1890FF; }
+  &.request_income { background: #FFF7E6; color: #FA8C16; }
+  &.reward_received { background: #FFF0F6; color: #EB2F96; }
+  &.reward_given { background: #F6FFED; color: #52C41A; }
+  &.daily_reset, &.monthly_reset { background: #F5F5F5; color: #999; }
 }
 
 .amount {
@@ -144,6 +151,8 @@ function goFullRecords() {
   font-weight: 700;
   &.request_deduct { color: #FF4D4F; }
   &.allocate { color: #1FCB6A; }
+  &.reward_received { color: #FF1493; }
+  &.reward_given { color: #FF69B4; }
   &.daily_reset { color: #999; font-size: 26rpx; font-weight: normal; }
 }
 
