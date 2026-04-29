@@ -60,6 +60,10 @@ export const memorialApi = {
   getMainMemorial: () => request<any>({ url: '/memorial/main' })
 };
 
+export const reportApi = {
+  overview: (type: string = 'month') => request<any>({ url: `/report/overview`, params: { type } }),
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID

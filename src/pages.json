@@ -25,6 +25,10 @@
     {
       "path": "pages/album/preview",
       "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/report/index",
+      "style": { "navigationStyle": "custom" }
     }
   ],
   "globalStyle": {

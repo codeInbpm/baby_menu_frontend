@@ -76,6 +76,9 @@
       </view>
     </view>
 
+    <!-- 宠爱报表入口 -->
+    <ReportEntryCard v-if="user.bound" />
+
     <!-- 积分记录 (双方都可见，因为都能收到分配) -->
     <PointsRecord v-if="user.bound" />
 
@@ -84,7 +87,6 @@
         <text>申请角色互换</text><text class="arrow">›</text>
       </view>
       <view class="row" @click="goRequests"><text>我的请求</text><text class="arrow">›</text></view>
-      <view class="row disabled"><text>宠爱报表</text><text class="badge">即将上线</text></view>
       <view v-if="user.bound" class="row danger" @click="onUnbind"><text>解除绑定</text></view>
       <view class="row danger" @click="onLogout"><text>退出登录</text></view>
     </view>
@@ -100,6 +102,7 @@ import { usePointsStore } from '@/store/points';
 import PointsCard from './PointsCard.vue';
 import OwnerCard from './OwnerCard.vue';
 import PointsRecord from './PointsRecord.vue';
+import ReportEntryCard from './ReportEntryCard.vue';
 import dayjs from 'dayjs';
 import { Lunar } from 'lunar-javascript';
 
