@@ -24,6 +24,13 @@
           <text v-if="user.info?.roleInCouple === 'owner'" class="role-badge owner">专属管家</text>
           <text v-if="user.info?.roleInCouple === 'pet'" class="role-badge pet">小宝贝</text>
         </view>
+        <!-- 当前佩戴称号 -->
+        <view v-if="titleStore.currentTitle" class="current-title-box" @click="goTitlePage">
+          <text class="title-text" :class="titleStore.currentTitle.level">
+            {{ titleStore.currentTitle.titleName }}
+          </text>
+          <wd-icon name="arrow-right" size="12px" color="rgba(255,255,255,0.6)" />
+        </view>
         <view v-if="user.bound" class="bound">
           已绑定 ❤️ {{ user.partner?.nickname || '宝贝' }}
         </view>
@@ -79,6 +86,9 @@
     <!-- 情侣足迹地图入口 -->
     <FootprintEntryCard v-if="user.bound" />
 
+    <!-- 情侣称号入口 -->
+    <TitleEntryCard v-if="user.bound" />
+
     <!-- 宠爱报表入口 -->
     <ReportEntryCard v-if="user.bound" />
 
@@ -107,11 +117,14 @@ import OwnerCard from './OwnerCard.vue';
 import PointsRecord from './PointsRecord.vue';
 import ReportEntryCard from './ReportEntryCard.vue';
 import FootprintEntryCard from './FootprintEntryCard.vue';
+import TitleEntryCard from './TitleEntryCard.vue';
+import { useTitleStore } from '@/store/title';
 import dayjs from 'dayjs';
 import { Lunar } from 'lunar-javascript';
 
 const user = useUserStore();
 const pointsStore = usePointsStore();
+const titleStore = useTitleStore();
 
 const mainMemorialInfo = computed(() => {
   const item = user.mainMemorial;
@@ -130,10 +143,10 @@ const mainMemorialInfo = computed(() => {
   }
 
   if (item.recordType === 1) {
-    const days = today.diff(originalSolarDate, 'day');
+    const days = today.diff(originalSolarDate, 'day') + 1;
     return {
-      text: `${item.title}已有`,
-      days: Math.max(0, days)
+      text: `在一起第`,
+      days: Math.max(1, days)
     };
   } else {
     let nextSolarDate = originalSolarDate;
@@ -237,6 +250,7 @@ async function load() {
     if (me.bound) {
       pointsStore.fetchInfo();
       pointsStore.fetchTransactions();
+      titleStore.fetchCurrentTitle();
     }
     
     // Check for unread rewards for Owner
@@ -249,6 +263,7 @@ onShow(load);
 
 function goAlbum() { uni.navigateTo({ url: '/pages/album/index' }); }
 function goMemorial() { uni.navigateTo({ url: '/pages/memorial/index' }); }
+function goTitlePage() { uni.navigateTo({ url: '/pages/title/index' }); }
 
 async function requestSwitchRole() {
   uni.showModal({
@@ -348,6 +363,23 @@ function onLogout() {
 .bound { font-size: 24rpx; color: #fff; margin-top: 12rpx; opacity: .95; }
 .unbound { font-size: 24rpx; color: #fff; margin-top: 12rpx; opacity: .85; }
 
+.current-title-box {
+  display: inline-flex; align-items: center; gap: 8rpx;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4rpx);
+  padding: 6rpx 16rpx; border-radius: 999rpx;
+  margin-top: 16rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.2);
+  
+  &:active { opacity: 0.8; }
+  
+  .title-text {
+    font-size: 22rpx; font-weight: bold; color: #fff;
+    &.rare { color: #FFEBCD; text-shadow: 0 0 8rpx rgba(255,215,0,0.5); }
+    &.legend { color: #FFF; text-shadow: 0 0 12rpx rgba(255,255,255,0.8), 0 0 20rpx rgba(255,20,147,0.5); }
+  }
+}
+
 .together-badge {
   position: absolute; right: 32rpx; top: 32rpx;
   display: flex; flex-direction: column; align-items: flex-end;
@@ -428,7 +460,8 @@ function onLogout() {
 .row:last-child { border-bottom: none; }
 .row.disabled { color: #aaa; }
 .row .badge { font-size: 22rpx; color: #999; background: #f5f5f5; padding: 4rpx 12rpx; border-radius: 999rpx; }
-.row .arrow { color: #ccc; }
+.row .arrow { color: #ccc; margin-left: 8rpx; }
+.row .row-right { display: flex; align-items: center; }
 .row.danger { color: #ff5b5b; justify-content: center; }
 
 /* 奖励动画样式 */

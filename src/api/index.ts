@@ -71,6 +71,13 @@ export const footprintApi = {
   remove: (id: number) => request({ url: `/footprint/${id}`, method: 'DELETE' })
 };
 
+export const titleApi = {
+  list: () => request<any[]>({ url: '/title/list' }),
+  wear: (code: string) => request({ url: `/title/wear/${code}`, method: 'POST' }),
+  current: () => request<any>({ url: '/title/current' }),
+  check: () => request({ url: '/title/check', method: 'POST' })
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID

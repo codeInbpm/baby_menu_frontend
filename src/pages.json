@@ -41,6 +41,14 @@
     {
       "path": "pages/footprint/detail",
       "style": { "navigationBarTitleText": "足迹详情" }
+    },
+    {
+      "path": "pages/title/index",
+      "style": {
+        "navigationBarTitleText": "我的称号",
+        "navigationBarBackgroundColor": "#FF9A9E",
+        "navigationBarTextStyle": "white"
+      }
     }
   ],
   "globalStyle": {
