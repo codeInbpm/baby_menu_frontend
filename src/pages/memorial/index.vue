@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="user.themeClass">
     <view class="bg-pattern"></view>
     <view class="content-wrap">
       
@@ -260,7 +260,7 @@ function onDelete(id: number) {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background-color: #F6666E;
+  background-color: var(--primary-color);
   position: relative;
   padding-bottom: 200rpx;
   overflow: hidden;
@@ -326,7 +326,7 @@ function onDelete(id: number) {
       .num {
         font-size: 80rpx;
         font-weight: 700;
-        color: #F6666E;
+        color: var(--primary-color);
         line-height: 1;
       }
       .unit {
@@ -410,7 +410,7 @@ function onDelete(id: number) {
   width: 110rpx; height: 110rpx;
   border-radius: 55rpx;
   background: #fff;
-  color: #F6666E;
+  color: var(--primary-color);
   font-size: 60rpx;
   display: flex; justify-content: center; align-items: center;
   box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.2);
@@ -446,7 +446,7 @@ function onDelete(id: number) {
     .radio-item {
       padding: 10rpx 24rpx; font-size: 24rpx; color: #666; border-radius: 8rpx;
       transition: all 0.3s;
-      &.active { background: #fff; color: #F6666E; font-weight: 600; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05); }
+      &.active { background: #fff; color: var(--primary-color); font-weight: 600; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05); }
     }
   }
   .pop-footer {
@@ -454,7 +454,7 @@ function onDelete(id: number) {
     .btn { flex: 1; height: 88rpx; border-radius: 44rpx; display: flex; justify-content: center; align-items: center; font-size: 30rpx; font-weight: 600; }
     .cancel { background: #f5f5f5; color: #666; }
     .delete { background: #FFF0F0; color: #FF4D4F; }
-    .confirm { background: #F6666E; color: #fff; box-shadow: 0 6rpx 20rpx rgba(246,102,110,0.3); }
+    .confirm { background: var(--primary-color); color: #fff; box-shadow: 0 6rpx 20rpx var(--card-shadow); }
   }
 }
 </style>

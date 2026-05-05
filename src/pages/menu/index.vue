@@ -1,5 +1,5 @@
 <template>
-  <view class="menu-page">
+  <view class="menu-page" :class="user.themeClass">
     <!-- 沉浸式背景图 -->
     <image class="bg-img" :src="'/static/bg.png'" mode="aspectFill" />
 
@@ -215,7 +215,7 @@ page {
 .menu-page {
   height: 100vh;
   position: relative;
-  background: #FFF5F8; /* 底部托底色，如果需要可以改为白色 */
+  background: var(--bg-color);
 }
 
 /* 沉浸式背景图 */
@@ -234,12 +234,12 @@ page {
   z-index: 1;
   /* 留出上方的空间给背景图展示，动态结合状态栏高度 */
   margin-top: calc(240rpx + var(--status-bar-height));
-  background: #FFF5F8;
+  background: var(--bg-color);
   border-radius: 40rpx 40rpx 0 0;
   height: calc(100vh - 240rpx - var(--status-bar-height));
   display: flex;
   flex-direction: column;
-  box-shadow: 0 -4rpx 16rpx rgba(255, 111, 160, 0.08); /* 稍微加一点阴影过渡 */
+  box-shadow: 0 -4rpx 16rpx var(--card-shadow);
 }
 
 /* ===== topbar ===== */
@@ -253,7 +253,7 @@ page {
 .avatar {
   width: 96rpx; height: 96rpx; border-radius: 24rpx; margin-right: 20rpx;
   border: 4rpx solid #fff;
-  box-shadow: 0 4rpx 12rpx rgba(255, 111, 160, .15);
+  box-shadow: 0 4rpx 12rpx var(--card-shadow);
 }
 .title-block .title {
   font-size: 36rpx; font-weight: 700; color: #2c2c2c;
@@ -310,9 +310,9 @@ page {
 }
 .side-item.active {
   background: #fff;
-  color: #FF6FA0;
+  color: var(--primary-color);
   font-weight: 700;
-  box-shadow: 0 2rpx 10rpx rgba(255, 111, 160, .08);
+  box-shadow: 0 2rpx 10rpx var(--card-shadow);
 }
 
 .content {
@@ -336,7 +336,7 @@ page {
 }
 .dish-img {
   width: 160rpx; height: 160rpx;
-  border-radius: 20rpx; background: #FFEEF4;
+  border-radius: 20rpx; background: var(--bg-color);
   margin-right: 24rpx;
 }
 .dish-info { flex: 1; }
@@ -355,7 +355,7 @@ page {
   font-size: 36rpx; font-weight: 700;
   box-shadow: 0 4rpx 10rpx rgba(31, 203, 106, .3);
 }
-.add-btn.added { background: #FF6FA0; box-shadow: 0 4rpx 10rpx rgba(255, 111, 160, .3); }
+.add-btn.added { background: var(--primary-color); box-shadow: 0 4rpx 10rpx var(--card-shadow); }
 
 .empty {
   text-align: center; color: #B8A8B0; padding: 80rpx 0; font-size: 26rpx;
@@ -364,9 +364,9 @@ page {
 /* ===== floating cart ===== */
 .cart-fab {
   position: fixed; bottom: 60rpx; right: 40rpx;
-  width: 110rpx; height: 110rpx; background: linear-gradient(135deg, #FF69B4, #FF1493);
+  width: 110rpx; height: 110rpx; background: var(--gradient);
   border-radius: 55rpx; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(255,20,147,0.4); z-index: 100;
+  box-shadow: 0 8rpx 24rpx var(--card-shadow); z-index: 100;
 }
 .cart-icon { font-size: 50rpx; }
 .cart-fab .badge {
@@ -377,9 +377,9 @@ page {
 
 .owner-hint {
   position: fixed; bottom: 60rpx; left: 50%; transform: translateX(-50%);
-  background: rgba(255,105,180, 0.9); color: #fff;
+  background: var(--primary-color); color: #fff; opacity: 0.9;
   padding: 16rpx 40rpx; border-radius: 999rpx;
-  font-size: 26rpx; box-shadow: 0 8rpx 24rpx rgba(255,105,180,0.3);
+  font-size: 26rpx; box-shadow: 0 8rpx 24rpx var(--card-shadow);
   z-index: 100; white-space: nowrap;
 }
 
@@ -393,7 +393,7 @@ page {
   width: 600rpx; background: #fff; border-radius: 32rpx;
   padding: 40rpx 32rpx; text-align: center;
 }
-.modal-title { font-size: 34rpx; font-weight: 700; color: #FF6FA0; }
+.modal-title { font-size: 34rpx; font-weight: 700; color: var(--primary-color); }
 .modal-body { padding: 24rpx 0; max-height: 400rpx; overflow-y: auto; }
 .modal-row { font-size: 28rpx; color: #555; margin: 10rpx 0; text-align: left; }
 .modal-actions { display: flex; gap: 20rpx; margin-top: 16rpx; }
@@ -403,6 +403,6 @@ page {
 }
 .modal-btn.ghost { background: #f4f4f4; color: #666; }
 .modal-btn.primary {
-  background: linear-gradient(135deg, #FF8FB3, #FF6FA0); color: #fff; font-weight: 600;
+  background: var(--gradient); color: #fff; font-weight: 600;
 }
 </style>

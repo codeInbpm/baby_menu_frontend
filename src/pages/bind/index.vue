@@ -38,6 +38,31 @@
         <input class="input" v-model="inputCode" placeholder="请输入 8 位邀请码" maxlength="8" />
         <view class="input-hint" v-if="inputCode">准备好绑定了吗？✨</view>
       </view>
+
+      <view class="role-selection">
+        <view class="role-title">选择我的角色</view>
+        <view class="role-grid">
+          <view 
+            class="role-item" 
+            :class="{ active: selectedRole === 'pet' }" 
+            @click="selectedRole = 'pet'"
+          >
+            <view class="role-icon">👸</view>
+            <view class="role-name">我是公主</view>
+            <view class="role-tag">Pet</view>
+          </view>
+          <view 
+            class="role-item" 
+            :class="{ active: selectedRole === 'owner' }" 
+            @click="selectedRole = 'owner'"
+          >
+            <view class="role-icon">🤵</view>
+            <view class="role-name">我是管家</view>
+            <view class="role-tag">Owner</view>
+          </view>
+        </view>
+      </view>
+
       <button class="btn-primary" @click="bind">立即绑定</button>
     </view>
 
@@ -66,6 +91,7 @@ import { coupleApi } from '@/api';
 
 const myCode = ref('');
 const inputCode = ref('');
+const selectedRole = ref('pet'); // 默认选中公主
 const showShareModal = ref(false);
 
 // 处理来自分享的邀请码
@@ -147,7 +173,7 @@ async function bind() {
   }
   uni.showLoading({ title: '绑定中…' });
   try {
-    await coupleApi.bind(inputCode.value.trim());
+    await coupleApi.bind(inputCode.value.trim(), selectedRole.value);
     uni.hideLoading();
     uni.showToast({ title: '绑定成功 ❤️', icon: 'success' });
     setTimeout(() => uni.reLaunch({ url: '/pages/menu/index' }), 800);
@@ -256,6 +282,25 @@ async function bind() {
     &:focus { border-color: #FF6FA0; }
   }
   .input-hint { font-size: 22rpx; color: #FF6FA0; text-align: center; margin-top: 8rpx; }
+}
+
+.role-selection {
+  margin-bottom: 40rpx;
+  .role-title { font-size: 26rpx; color: #666; margin-bottom: 20rpx; text-align: center; }
+  .role-grid { display: flex; gap: 24rpx; }
+  .role-item {
+    flex: 1; background: #f9f9f9; border-radius: 24rpx; padding: 30rpx 20rpx;
+    display: flex; flex-direction: column; align-items: center;
+    border: 4rpx solid transparent; transition: all 0.3s;
+    &.active {
+      background: #FFF0F5; border-color: #FF6FA0;
+      .role-icon { transform: scale(1.1); }
+      .role-name { color: #FF6FA0; font-weight: bold; }
+    }
+  }
+  .role-icon { font-size: 60rpx; margin-bottom: 12rpx; transition: transform 0.3s; }
+  .role-name { font-size: 28rpx; color: #333; margin-bottom: 4rpx; }
+  .role-tag { font-size: 20rpx; color: #999; }
 }
 
 .fallback-modal {

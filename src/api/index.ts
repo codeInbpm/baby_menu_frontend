@@ -10,11 +10,12 @@ export const authApi = {
 export const userApi = {
   me: () => request<{ user: any; partner: any; bound: boolean }>({ url: '/user/me' }),
   clearUnreadReward: () => request({ url: '/user/clearUnreadReward', method: 'POST' }),
+  updateProfile: (data: { nickname?: string; avatar?: string }) => request({ url: '/user/profile', method: 'PUT', data }),
 };
 
 export const coupleApi = {
   invite:  () => request<{ code: string }>({ url: '/couple/invite', method: 'POST' }),
-  bind:    (inviteCode: string) => request({ url: '/couple/bind', method: 'POST', data: { inviteCode } }),
+  bind:    (inviteCode: string, role: string) => request({ url: '/couple/bind', method: 'POST', data: { inviteCode, role } }),
   unbind:  () => request({ url: '/couple/unbind', method: 'POST' }),
   switchRoleRequest: () => request({ url: '/couple/switch-role/request', method: 'POST' }),
   switchRoleAccept: () => request({ url: '/couple/switch-role/accept', method: 'POST' }),

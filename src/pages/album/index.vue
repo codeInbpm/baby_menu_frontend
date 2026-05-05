@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="user.themeClass">
     <view class="bg-pattern"></view>
     
     <view class="header">

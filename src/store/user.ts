@@ -62,4 +62,7 @@ export const useUserStore = defineStore('user', {
       uni.removeStorageSync('user');
     },
   },
+  getters: {
+    themeClass: (state) => (state.info?.roleInCouple === 'owner' ? 'theme-owner' : 'theme-pet'),
+  }
 });

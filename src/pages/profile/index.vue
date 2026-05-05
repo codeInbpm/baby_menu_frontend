@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="user.themeClass">
     <!-- 奖励动画遮罩 -->
     <view class="reward-overlay" v-if="showRewardAnimation">
       <!-- 飞行的心 -->
@@ -17,10 +17,14 @@
     </view>
 
     <view class="profile-card" :style="profileCardStyle">
-      <image class="avatar" :src="user.info?.avatar || '/static/love.png'" mode="aspectFill" />
+      <button class="avatar-wrapper" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+        <image class="avatar" :src="user.info?.avatar || '/static/love.png'" mode="aspectFill" />
+        <view class="avatar-edit-tag">更换</view>
+      </button>
       <view class="info">
-        <view class="name">
+        <view class="name" @click="showEditNickname = true">
           {{ user.info?.nickname || '宝贝' }}
+          <wd-icon name="edit-1" size="14px" color="rgba(255,255,255,0.8)" />
           <text v-if="user.info?.roleInCouple === 'owner'" class="role-badge owner">专属管家</text>
           <text v-if="user.info?.roleInCouple === 'pet'" class="role-badge pet">小宝贝</text>
         </view>
@@ -103,6 +107,28 @@
       <view v-if="user.bound" class="row danger" @click="onUnbind"><text>解除绑定</text></view>
       <view class="row danger" @click="onLogout"><text>退出登录</text></view>
     </view>
+
+    <!-- 修改昵称弹窗 -->
+    <wd-popup v-model="showEditNickname" position="center" custom-style="border-radius: 32rpx; width: 80%;">
+      <view class="edit-popup">
+        <view class="popup-title">修改你的昵称</view>
+        <view class="input-wrap">
+          <input 
+            type="nickname" 
+            class="nickname-input" 
+            v-model="tempNickname" 
+            placeholder="请输入新昵称" 
+            @blur="onNicknameBlur"
+            @confirm="saveNickname"
+          />
+        </view>
+        <view class="popup-tips">可以使用微信头像或直接输入</view>
+        <view class="popup-footer">
+          <view class="p-btn cancel" @click="showEditNickname = false">取消</view>
+          <view class="p-btn confirm" @click="saveNickname">确定</view>
+        </view>
+      </view>
+    </wd-popup>
   </view>
 </template>
 
@@ -111,6 +137,7 @@ import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { coupleApi, userApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useUserStore } from '@/store/user';
+import { BASE_URL } from '@/utils/request';
 import { usePointsStore } from '@/store/points';
 import PointsCard from './PointsCard.vue';
 import OwnerCard from './OwnerCard.vue';
@@ -202,6 +229,67 @@ const showRewardAnimation = ref(false);
 const isFlying = ref(false);
 const isExploding = ref(false);
 const rewardAmount = ref(0);
+
+const showEditNickname = ref(false);
+const tempNickname = ref('');
+
+function onNicknameBlur(e: any) {
+  tempNickname.value = e.detail.value;
+}
+
+async function saveNickname() {
+  if (!tempNickname.value) return;
+  uni.showLoading({ title: '保存中...' });
+  try {
+    await userApi.updateProfile({ nickname: tempNickname.value });
+    user.setLogin(user.token, { ...user.info, nickname: tempNickname.value }, user.bound);
+    showEditNickname.value = false;
+    uni.showToast({ title: '昵称已更新', icon: 'success' });
+  } catch (e: any) {
+    uni.showToast({ title: e.message || '更新失败', icon: 'none' });
+  } finally {
+    uni.hideLoading();
+  }
+}
+
+async function onChooseAvatar(e: any) {
+  const { avatarUrl } = e.detail;
+  uni.showLoading({ title: '上传头像...' });
+  try {
+    const uploadedUrl = await uploadSingleFile(avatarUrl);
+    await userApi.updateProfile({ avatar: uploadedUrl });
+    user.setLogin(user.token, { ...user.info, avatar: uploadedUrl }, user.bound);
+    uni.showToast({ title: '头像已更新', icon: 'success' });
+  } catch (e: any) {
+    uni.showToast({ title: e.message || '更新失败', icon: 'none' });
+  } finally {
+    uni.hideLoading();
+  }
+}
+
+function uploadSingleFile(path: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    uni.uploadFile({
+      url: BASE_URL + '/upload/image',
+      filePath: path,
+      name: 'file',
+      header: { Authorization: 'Bearer ' + user.token },
+      success: (r) => {
+        try {
+          const body = JSON.parse(r.data);
+          if (body.code === 0) {
+            let url = body.data.url;
+            url = url.startsWith('http') ? url : BASE_URL.replace('/api', '') + url;
+            resolve(url);
+          } else {
+            reject(new Error(body.message));
+          }
+        } catch { reject(new Error('JSON解析失败')); }
+      },
+      fail: (e) => reject(e)
+    });
+  });
+}
 
 function getParticleStyle(i: number) {
   const angle = (i * 45) * (Math.PI / 180);
@@ -338,20 +426,32 @@ function onLogout() {
 }
 .profile-card {
   margin: 0 32rpx 32rpx;
-  background: linear-gradient(135deg, #FFB6C1, #FF8DA1);
+  background: var(--gradient);
   border-radius: 36rpx;
   padding: 40rpx 32rpx;
   display: flex; align-items: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10rpx 30rpx rgba(255, 141, 161, 0.25);
+  box-shadow: 0 10rpx 30rpx var(--card-shadow);
+}
+.avatar-wrapper {
+  padding: 0; margin: 0; background: none; line-height: 1; border-radius: 50%;
+  position: relative;
+  &::after { border: none; }
 }
 .avatar { width: 120rpx; height: 120rpx; border-radius: 50%; border: 4rpx solid #fff; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1); }
+.avatar-edit-tag {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.3); color: #fff; font-size: 18rpx;
+  padding: 4rpx 0; text-align: center;
+}
+
 .info { margin-left: 24rpx; flex: 1; }
 .name { 
   font-size: 36rpx; font-weight: 700; color: #fff; 
-  display: flex; align-items: center; gap: 12rpx;
+  display: flex; align-items: center; gap: 8rpx;
   text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
+  &:active { opacity: 0.8; }
 }
 .role-badge {
   font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 8rpx;
@@ -395,19 +495,19 @@ function onLogout() {
 
 .switch-notify {
   margin: 0 32rpx 32rpx; background: #fff; border-radius: 24rpx;
-  padding: 30rpx; box-shadow: 0 4rpx 20rpx rgba(255,105,180,0.15);
+  padding: 30rpx; box-shadow: 0 4rpx 20rpx var(--card-shadow);
   display: flex; flex-direction: column; align-items: center; text-align: center;
-  border: 2rpx solid #FFF0F5;
+  border: 2rpx solid var(--bg-color);
 }
 .switch-notify.waiting {
   background: #FCFAFA; border: 2rpx dashed #eee; box-shadow: none;
 }
 .switch-notify .text { font-size: 28rpx; color: #555; margin-bottom: 20rpx; }
 .switch-notify .btn.primary {
-  background: linear-gradient(135deg, #FF69B4, #FF1493);
+  background: var(--gradient);
   color: #fff; font-size: 28rpx; font-weight: 600;
   padding: 16rpx 40rpx; border-radius: 999rpx;
-  box-shadow: 0 6rpx 16rpx rgba(255,20,147,0.3);
+  box-shadow: 0 6rpx 16rpx var(--card-shadow);
 }
 
 .romance-grid {
@@ -513,8 +613,8 @@ function onLogout() {
   transition: all 0.5s ease-out;
   background: rgba(255,255,255,0.95);
   padding: 24rpx 48rpx; border-radius: 999rpx;
-  box-shadow: 0 10rpx 40rpx rgba(255,105,180,0.25);
-  border: 2rpx solid #FFF0F5;
+  box-shadow: 0 10rpx 40rpx var(--card-shadow);
+  border: 2rpx solid var(--bg-color);
   
   &.show {
     opacity: 1;
@@ -536,5 +636,27 @@ function onLogout() {
 @keyframes pulsePoints {
   0% { transform: scale(1); text-shadow: 0 0 10rpx rgba(255,20,147,0.2); }
   100% { transform: scale(1.1); text-shadow: 0 0 20rpx rgba(255,20,147,0.6); }
+}
+
+/* 编辑弹窗 */
+.edit-popup {
+  background: #fff; padding: 40rpx;
+  .popup-title { font-size: 32rpx; font-weight: bold; color: #333; text-align: center; margin-bottom: 30rpx; }
+  .input-wrap {
+    background: #f5f5f5; border-radius: 12rpx; padding: 20rpx;
+    margin-bottom: 20rpx;
+    .nickname-input { width: 100%; height: 80rpx; font-size: 30rpx; }
+  }
+  .popup-tips { font-size: 24rpx; color: #999; text-align: center; margin-bottom: 40rpx; }
+  .popup-footer {
+    display: flex; gap: 20rpx;
+    .p-btn {
+      flex: 1; height: 88rpx; border-radius: 44rpx;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 28rpx; font-weight: bold;
+    }
+    .cancel { background: #f0f0f0; color: #666; }
+    .confirm { background: var(--primary-color); color: #fff; }
+  }
 }
 </style>
