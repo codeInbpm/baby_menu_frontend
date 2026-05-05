@@ -59,7 +59,7 @@ export const useUserStore = defineStore('user', {
       this.partner = null;
       this.bound = false;
       uni.removeStorageSync('token');
-      uni.removeStorageSync('user');
+      uni.removeStorageSync('user_info');
     },
   },
   getters: {
