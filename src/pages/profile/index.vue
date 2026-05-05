@@ -90,6 +90,9 @@
     <!-- 情侣足迹地图入口 -->
     <FootprintEntryCard v-if="user.bound" />
 
+    <!-- 经期周期守护模块 -->
+    <PeriodModule v-if="user.bound" />
+
     <!-- 情侣称号入口 -->
     <TitleEntryCard v-if="user.bound" />
 
@@ -145,6 +148,7 @@ import PointsRecord from './PointsRecord.vue';
 import ReportEntryCard from './ReportEntryCard.vue';
 import FootprintEntryCard from './FootprintEntryCard.vue';
 import TitleEntryCard from './TitleEntryCard.vue';
+import PeriodModule from './PeriodModule.vue';
 import { useTitleStore } from '@/store/title';
 import dayjs from 'dayjs';
 import { Lunar } from 'lunar-javascript';

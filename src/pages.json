@@ -49,6 +49,10 @@
         "navigationBarBackgroundColor": "#FF9A9E",
         "navigationBarTextStyle": "white"
       }
+    },
+    {
+      "path": "pages/profile/PeriodCalendar",
+      "style": { "navigationStyle": "custom" }
     }
   ],
   "globalStyle": {
