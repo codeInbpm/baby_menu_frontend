@@ -257,15 +257,21 @@ async function saveNickname() {
 }
 
 async function onChooseAvatar(e: any) {
-  const { avatarUrl } = e.detail;
+  const avatarUrl = e.detail.avatarUrl;
+  if (!avatarUrl) {
+    uni.showToast({ title: '获取头像路径失败', icon: 'none' });
+    return;
+  }
+  
   uni.showLoading({ title: '上传头像...' });
   try {
     const uploadedUrl = await uploadSingleFile(avatarUrl);
     await userApi.updateProfile({ avatar: uploadedUrl });
     user.setLogin(user.token, { ...user.info, avatar: uploadedUrl }, user.bound);
     uni.showToast({ title: '头像已更新', icon: 'success' });
-  } catch (e: any) {
-    uni.showToast({ title: e.message || '更新失败', icon: 'none' });
+  } catch (err: any) {
+    console.error('Avatar upload failed:', err);
+    uni.showToast({ title: err.message || '更新失败', icon: 'none' });
   } finally {
     uni.hideLoading();
   }
@@ -279,18 +285,29 @@ function uploadSingleFile(path: string): Promise<string> {
       name: 'file',
       header: { Authorization: 'Bearer ' + user.token },
       success: (r) => {
+        if (r.statusCode !== 200) {
+          console.error('Upload failed with status:', r.statusCode, r.data);
+          reject(new Error(`服务器错误(${r.statusCode})`));
+          return;
+        }
         try {
-          const body = JSON.parse(r.data);
+          const body = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
           if (body.code === 0) {
             let url = body.data.url;
             url = url.startsWith('http') ? url : BASE_URL.replace('/api', '') + url;
             resolve(url);
           } else {
-            reject(new Error(body.message));
+            reject(new Error(body.message || '服务器返回错误'));
           }
-        } catch { reject(new Error('JSON解析失败')); }
+        } catch (err) {
+          console.error('Parse upload response failed:', r.data);
+          reject(new Error('上传响应解析失败'));
+        }
       },
-      fail: (e) => reject(e)
+      fail: (err) => {
+        console.error('uni.uploadFile fail:', err);
+        reject(new Error('网络上传失败'));
+      }
     });
   });
 }
