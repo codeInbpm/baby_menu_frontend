@@ -89,6 +89,15 @@ export const periodApi = {
   analysis: (targetUserId?: number) => request<any>({ url: '/period/analysis', params: { targetUserId } }),
 };
 
+export const bucketApi = {
+  add: (data: any) => request({ url: '/bucket/add', method: 'POST', data }),
+  list: (current = 1, size = 10, status?: number) => request<any>({ url: '/bucket/list', params: { current, size, status } }),
+  detail: (id: number) => request<any>({ url: `/bucket/detail/${id}` }),
+  check: (id: number) => request({ url: `/bucket/check/${id}`, method: 'POST' }),
+  updateNote: (id: number, note: string) => request({ url: `/bucket/note/${id}`, method: 'POST', data: { note } }),
+  remove: (id: number) => request({ url: `/bucket/${id}`, method: 'DELETE' }),
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID

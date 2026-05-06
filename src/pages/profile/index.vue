@@ -107,6 +107,9 @@
     <!-- 经期周期守护模块 -->
     <PeriodModule v-if="user.bound" />
 
+    <!-- 情侣共同待办清单入口 -->
+    <BucketEntryCard v-if="user.bound" />
+
     <!-- 情侣称号入口 -->
     <TitleEntryCard v-if="user.bound" />
 
@@ -162,6 +165,7 @@ import PointsRecord from './PointsRecord.vue';
 import ReportEntryCard from './ReportEntryCard.vue';
 import FootprintEntryCard from './FootprintEntryCard.vue';
 import TitleEntryCard from './TitleEntryCard.vue';
+import BucketEntryCard from './BucketEntryCard.vue';
 import PeriodModule from './PeriodModule.vue';
 import { useTitleStore } from '@/store/title';
 import dayjs from 'dayjs';

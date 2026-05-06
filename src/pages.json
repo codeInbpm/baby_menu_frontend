@@ -45,11 +45,15 @@
     },
     {
       "path": "pages/title/index",
-      "style": {
-        "navigationBarTitleText": "我的称号",
-        "navigationBarBackgroundColor": "#FF9A9E",
-        "navigationBarTextStyle": "white"
-      }
+      "style": { "navigationBarTitleText": "情侣称号", "navigationBarBackgroundColor": "#FFF0F6" }
+    },
+    {
+      "path": "pages/bucket/index",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/bucket/detail",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
     },
     {
       "path": "pages/profile/PeriodCalendar",
