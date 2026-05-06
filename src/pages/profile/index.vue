@@ -161,6 +161,14 @@ const mainMemorialInfo = computed(() => {
   const item = user.mainMemorial;
   if (!item) return null;
   
+  let title = item.title;
+  if (item.userId && item.userId !== user.info?.id) {
+    if (title.includes('我的')) {
+      const partnerName = user.partner?.nickname || 'TA';
+      title = title.replace('我的', partnerName + '的');
+    }
+  }
+
   const today = dayjs().startOf('day');
   let originalSolarDate = dayjs(item.memorialDate).startOf('day');
   let lunarInfo: any = null;
@@ -201,7 +209,7 @@ const mainMemorialInfo = computed(() => {
     }
     const days = nextSolarDate.diff(today, 'day');
     return {
-      text: `${item.title}还有`,
+      text: `${title}还有`,
       days: Math.max(0, days)
     };
   }

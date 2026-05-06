@@ -144,15 +144,23 @@ function getDaysInfo(item: any) {
     lunarInfo = { y, m, d };
   }
 
+  let title = item.title;
+  if (item.userId && item.userId !== user.info?.id) {
+    if (title.includes('我的')) {
+      const partnerName = user.partner?.nickname || 'TA';
+      title = title.replace('我的', partnerName + '的');
+    }
+  }
+
   // 1: 累计日
   if (item.recordType === 1) {
     const days = today.diff(originalSolarDate, 'day');
     return {
       type: 'past',
       days: Math.max(0, days),
-      text: `${item.title}已有`,
+      text: `${title}已有`,
       targetDate: originalSolarDate.format('YYYY年MM月DD日'),
-      icon: item.title.includes('生日') ? '🎂' : '❤️'
+      icon: title.includes('生日') ? '🎂' : '❤️'
     };
   } else {
     // 0: 倒数日
@@ -181,9 +189,9 @@ function getDaysInfo(item: any) {
     return {
       type: 'future',
       days: Math.max(0, days),
-      text: `${item.title}还有`,
+      text: `${title}还有`,
       targetDate: nextSolarDate.format('YYYY年MM月DD日') + (item.calendarType === 1 ? '(农)' : ''),
-      icon: item.title.includes('生日') ? '🎂' : (item.title.includes('在一起') ? '❤️' : '🎉')
+      icon: title.includes('生日') ? '🎂' : (title.includes('在一起') ? '❤️' : '🎉')
     };
   }
 }
