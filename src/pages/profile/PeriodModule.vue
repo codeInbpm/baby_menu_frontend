@@ -24,13 +24,52 @@
       </view>
     </view>
 
-    <view class="tip-card">
+    <view class="tip-card" v-if="!isOwner">
       <view class="tip-icon">💡</view>
       <view class="tip-content">
         <view class="tip-title">今日建议</view>
         <view class="tip-desc">{{ displayTip }}</view>
       </view>
-      <view class="action-btn" v-if="!isOwner" @click="goCalendar">记一笔</view>
+      <view class="action-btn" @click="goCalendar">记一笔</view>
+    </view>
+
+    <!-- 男生端：今日照顾计划 -->
+    <view class="care-section" v-if="isOwner && overview.todayCare">
+      <view class="care-header">
+        <text class="c-title">今日如何照顾她 💖</text>
+        <text class="c-phase">{{ overview.todayCare.phaseName }}</text>
+      </view>
+      
+      <!-- 情绪安抚 -->
+      <view class="care-block emotion" v-if="overview.todayCare.emotionAdvice">
+        <view class="b-title">💭 情绪解码</view>
+        <view class="b-text">{{ overview.todayCare.emotionAdvice }}</view>
+      </view>
+
+      <!-- 行动建议 -->
+      <view class="care-block action" v-if="overview.todayCare.actionAdvice || overview.todayCare.careTips?.length">
+        <view class="b-title">🛠️ 行动指南</view>
+        <view class="b-text">{{ overview.todayCare.actionAdvice }}</view>
+        <view class="tips-list">
+          <view class="t-item" v-for="(t, idx) in overview.todayCare.careTips" :key="idx">
+            <text class="dot">•</text> <text>{{ t }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 饮食红黑榜 -->
+      <view class="care-block food" v-if="overview.todayCare.foodsToEat?.length || overview.todayCare.foodsToAvoid?.length">
+        <view class="food-row">
+          <view class="f-col eat" v-if="overview.todayCare.foodsToEat?.length">
+            <view class="f-title">✅ 适宜</view>
+            <view class="f-item" v-for="f in overview.todayCare.foodsToEat" :key="f">{{ f }}</view>
+          </view>
+          <view class="f-col avoid" v-if="overview.todayCare.foodsToAvoid?.length">
+            <view class="f-title">❌ 忌口</view>
+            <view class="f-item" v-for="f in overview.todayCare.foodsToAvoid" :key="f">{{ f }}</view>
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- 快捷功能 -->
@@ -62,12 +101,6 @@ const isOwner = computed(() => user.info?.roleInCouple === 'owner');
 const themeClass = computed(() => user.themeClass);
 
 const displayTip = computed(() => {
-  if (isOwner.value) {
-    if (overview.value.status === '经期中') return '她现在在经期，记得多关心，少惹她生气哦 😄';
-    if (overview.value.status === '即将到来') return '大姨妈快到了，可以提前准备点暖宝宝或热饮 ☕';
-    if (overview.value.status === '排卵期') return '现在是排卵期，心情可能会有波动，多陪陪她 ❤️';
-    return '她现在处于安全期，带她去吃好吃的吧 🍰';
-  }
   return overview.value.dailyTip || '保持好的心情，迎接每一天 🌸';
 });
 
@@ -176,5 +209,36 @@ onMounted(load);
     font-size: 24rpx; color: #666;
   }
   .l-icon { font-size: 28rpx; }
+}
+
+.care-section {
+  background: #FFF0F5;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-top: 20rpx;
+}
+.care-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 24rpx;
+  .c-title { font-size: 30rpx; font-weight: bold; color: #FF4D8D; }
+  .c-phase { font-size: 22rpx; background: rgba(255,105,180,0.15); color: #FF4D8D; padding: 4rpx 16rpx; border-radius: 20rpx; }
+}
+.care-block {
+  margin-bottom: 24rpx; background: rgba(255,255,255,0.7); padding: 20rpx; border-radius: 16rpx;
+  &:last-child { margin-bottom: 0; }
+  .b-title { font-size: 26rpx; font-weight: bold; color: #333; margin-bottom: 12rpx; }
+  .b-text { font-size: 24rpx; color: #666; line-height: 1.5; }
+}
+.tips-list {
+  margin-top: 12rpx;
+  .t-item { font-size: 24rpx; color: #555; display: flex; align-items: flex-start; margin-bottom: 8rpx; }
+  .dot { margin-right: 8rpx; color: #FF4D8D; font-weight: bold; }
+}
+.food-row {
+  display: flex; gap: 20rpx;
+  .f-col { flex: 1; }
+  .f-title { font-size: 24rpx; font-weight: bold; margin-bottom: 8rpx; }
+  .eat .f-title { color: #1FCB6A; }
+  .avoid .f-title { color: #FF4D4F; }
+  .f-item { font-size: 22rpx; color: #666; margin-bottom: 6rpx; line-height: 1.4; }
 }
 </style>

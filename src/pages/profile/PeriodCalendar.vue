@@ -67,6 +67,17 @@
               @click="recordForm.flow = f.v"
             >{{ f.n }}</view>
           </view>
+          
+          <view class="form-label">痛经程度</view>
+          <view class="options-grid">
+            <view 
+              v-for="p in [{v:0,n:'无'},{v:1,n:'轻微'},{v:2,n:'中度'},{v:3,n:'严重'}]" 
+              :key="p.v"
+              class="opt-item"
+              :class="{ active: recordForm.painLevel === p.v }"
+              @click="recordForm.painLevel = p.v"
+            >{{ p.n }}</view>
+          </view>
         </template>
 
         <view class="form-label">心情</view>
@@ -80,21 +91,69 @@
           >{{ m.n }}</view>
         </view>
 
+        <view class="form-label">特殊需求 (他能为你做什么)</view>
+        <textarea class="textarea" style="height: 100rpx;" v-model="recordForm.specialNeeds" placeholder="例如：想喝红糖水、想吃火锅..." />
+
         <view class="form-label">备注</view>
         <textarea class="textarea" v-model="recordForm.note" placeholder="写点什么吧..." />
 
         <button class="btn-primary" @click="saveRecord">保存记录</button>
       </view>
       <view class="record-display" v-else>
-        <view class="display-item" v-if="selectedDay.record">
+        <!-- Owner 查看记录 -->
+        <view class="display-item" v-if="selectedDay.record?.painLevel">
+          <text class="label">痛经程度：</text>
+          <text>{{ getPainName(selectedDay.record.painLevel) }}</text>
+        </view>
+        <view class="display-item" v-if="selectedDay.record?.mood">
           <text class="label">心情：</text>
           <text>{{ getMoodName(selectedDay.record.mood) }}</text>
+        </view>
+        <view class="display-item" v-if="selectedDay.record?.specialNeeds">
+          <text class="label">她的需求：</text>
+          <text>{{ selectedDay.record.specialNeeds }}</text>
         </view>
         <view class="display-item" v-if="selectedDay.record?.note">
           <text class="label">备注：</text>
           <text>{{ selectedDay.record.note }}</text>
         </view>
-        <view class="owner-tip" v-else>她这天没有留下备注哦 ❤️</view>
+        <view class="owner-tip" v-if="!selectedDay.record">她这天没有留下记录哦 ❤️</view>
+        
+        <!-- 今日关怀建议 -->
+        <view class="care-section" v-if="dayCareData">
+          <view class="care-header">
+            <text class="c-title">如何照顾她 💖</text>
+            <text class="c-phase">{{ dayCareData.phaseName }}</text>
+          </view>
+          
+          <view class="care-block emotion" v-if="dayCareData.emotionAdvice">
+            <view class="b-title">💭 情绪解码</view>
+            <view class="b-text">{{ dayCareData.emotionAdvice }}</view>
+          </view>
+
+          <view class="care-block action" v-if="dayCareData.actionAdvice || dayCareData.careTips?.length">
+            <view class="b-title">🛠️ 行动指南</view>
+            <view class="b-text">{{ dayCareData.actionAdvice }}</view>
+            <view class="tips-list">
+              <view class="t-item" v-for="(t, idx) in dayCareData.careTips" :key="idx">
+                <text class="dot">•</text> <text>{{ t }}</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="care-block food" v-if="dayCareData.foodsToEat?.length || dayCareData.foodsToAvoid?.length">
+            <view class="food-row">
+              <view class="f-col eat" v-if="dayCareData.foodsToEat?.length">
+                <view class="f-title">✅ 适宜</view>
+                <view class="f-item" v-for="f in dayCareData.foodsToEat" :key="f">{{ f }}</view>
+              </view>
+              <view class="f-col avoid" v-if="dayCareData.foodsToAvoid?.length">
+                <view class="f-title">❌ 忌口</view>
+                <view class="f-item" v-for="f in dayCareData.foodsToAvoid" :key="f">{{ f }}</view>
+              </view>
+            </view>
+          </view>
+        </view>
       </view>
     </view>
 
@@ -140,8 +199,11 @@ const recordForm = ref({
   isPeriod: false,
   flow: 2,
   mood: 'smile',
-  note: ''
+  note: '',
+  painLevel: 0,
+  specialNeeds: ''
 });
+const dayCareData = ref<any>(null);
 
 const currentMonthText = computed(() => currentMonth.value.format('YYYY年MM月'));
 
@@ -231,7 +293,7 @@ const stabilityText = computed(() => {
   return (max - min) <= 3 ? '非常稳定' : '略有波动';
 });
 
-function onDayClick(day: any) {
+async function onDayClick(day: any) {
   selectedDay.value = {
     ...day,
     fullDate: dayjs(day.dateStr).format('M月D日')
@@ -242,15 +304,28 @@ function onDayClick(day: any) {
       isPeriod: day.record.isPeriod,
       flow: day.record.flow || 2,
       mood: day.record.mood || 'smile',
-      note: day.record.note || ''
+      note: day.record.note || '',
+      painLevel: day.record.painLevel || 0,
+      specialNeeds: day.record.specialNeeds || ''
     };
   } else {
     recordForm.value = {
       isPeriod: false,
       flow: 2,
       mood: 'smile',
-      note: ''
+      note: '',
+      painLevel: 0,
+      specialNeeds: ''
     };
+  }
+
+  // Load care data if owner
+  if (isOwner.value) {
+    dayCareData.value = null;
+    try {
+      const targetId = user.partner?.id;
+      dayCareData.value = await periodApi.dayCare(day.dateStr, targetId);
+    } catch(e) {}
   }
 }
 
@@ -269,6 +344,11 @@ async function saveRecord() {
 function getMoodName(mood: string) {
   const moods: any = { smile: '😊 开心', normal: '😐 一般', sad: '😢 难过', angry: '😡 生气' };
   return moods[mood] || '未知';
+}
+
+function getPainName(level: number) {
+  const pains = ['无', '轻微', '中度', '严重'];
+  return pains[level] || '未知';
 }
 
 function prevMonth() { currentMonth.value = currentMonth.value.subtract(1, 'month'); }
@@ -400,5 +480,36 @@ onMounted(() => {
   .analysis-tip {
     font-size: 22rpx; color: #999; text-align: center; margin-top: 10rpx;
   }
+}
+
+.care-section {
+  background: #FFF0F5;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-top: 30rpx;
+}
+.care-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 24rpx;
+  .c-title { font-size: 30rpx; font-weight: bold; color: #FF4D8D; }
+  .c-phase { font-size: 22rpx; background: rgba(255,105,180,0.15); color: #FF4D8D; padding: 4rpx 16rpx; border-radius: 20rpx; }
+}
+.care-block {
+  margin-bottom: 24rpx; background: rgba(255,255,255,0.7); padding: 20rpx; border-radius: 16rpx;
+  &:last-child { margin-bottom: 0; }
+  .b-title { font-size: 26rpx; font-weight: bold; color: #333; margin-bottom: 12rpx; }
+  .b-text { font-size: 24rpx; color: #666; line-height: 1.5; }
+}
+.tips-list {
+  margin-top: 12rpx;
+  .t-item { font-size: 24rpx; color: #555; display: flex; align-items: flex-start; margin-bottom: 8rpx; }
+  .dot { margin-right: 8rpx; color: #FF4D8D; font-weight: bold; }
+}
+.food-row {
+  display: flex; gap: 20rpx;
+  .f-col { flex: 1; }
+  .f-title { font-size: 24rpx; font-weight: bold; margin-bottom: 8rpx; }
+  .eat .f-title { color: #1FCB6A; }
+  .avoid .f-title { color: #FF4D4F; }
+  .f-item { font-size: 22rpx; color: #666; margin-bottom: 6rpx; line-height: 1.4; }
 }
 </style>

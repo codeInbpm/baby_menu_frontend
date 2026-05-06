@@ -87,6 +87,7 @@ export const periodApi = {
   getConfig: () => request<any>({ url: '/period/config' }),
   saveConfig: (data: any) => request({ url: '/period/config', method: 'POST', data }),
   analysis: (targetUserId?: number) => request<any>({ url: '/period/analysis', params: { targetUserId } }),
+  dayCare: (date: string, targetUserId?: number) => request<any>({ url: '/period/day-care', params: { date, targetUserId } }),
 };
 
 export const bucketApi = {
