@@ -106,7 +106,7 @@
       <view class="row" @click="requestSwitchRole" v-if="user.bound && !hasPendingSwitch">
         <text>申请角色互换</text><text class="arrow">›</text>
       </view>
-      <view class="row" @click="goRequests"><text>我的请求</text><text class="arrow">›</text></view>
+<!--      <view class="row" @click="goRequests"><text>我的请求</text><text class="arrow">›</text></view>-->
       <view v-if="user.bound" class="row danger" @click="onUnbind"><text>解除绑定</text></view>
       <view class="row danger" @click="onLogout"><text>退出登录</text></view>
     </view>
@@ -377,7 +377,7 @@ function goTitlePage() { uni.navigateTo({ url: '/pages/title/index' }); }
 async function requestSwitchRole() {
   uni.showModal({
     title: '角色互换',
-    content: '想要和TA互换主人与宠物的身份吗？',
+    content: '想要和TA互换管家与公主的身份吗？',
     success: async (r) => {
       if (r.confirm) {
         uni.requestSubscribeMessage({

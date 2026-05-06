@@ -83,14 +83,13 @@ function getAmountText(type: string, amount: number) {
 }
 
 function goFullRecords() {
-  uni.showToast({ title: '完整记录即将上线', icon: 'none' });
-  // TODO: implement full records page
+  uni.navigateTo({ url: '/pages/profile/records' });
 }
 </script>
 
 <style lang="scss" scoped>
 .points-record-module {
-  margin: 0 30rpx 40rpx;
+  margin: 30rpx 30rpx 40rpx;
 }
 
 .section-title {

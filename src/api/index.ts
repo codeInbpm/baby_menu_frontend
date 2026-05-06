@@ -43,6 +43,7 @@ export const requestApi = {
 export const pointsApi = {
   info: () => request<any>({ url: '/points/info' }),
   transactions: () => request<any[]>({ url: '/points/transactions' }),
+  transactionsPage: (current: number, size: number, types?: string) => request<any>({ url: '/points/transactions/page', params: { current, size, types } }),
   allocate: (data: { amount: number; note?: string }) => request({ url: '/points/allocate', method: 'POST', data }),
 };
 
