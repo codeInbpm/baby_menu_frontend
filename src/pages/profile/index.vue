@@ -1,17 +1,25 @@
 <template>
   <view class="page" :class="user.themeClass">
     <!-- 奖励动画遮罩 -->
-    <view class="reward-overlay" v-if="showRewardAnimation">
-      <!-- 飞行的心 -->
-      <view class="fly-heart" :class="{ 'fly': isFlying }" v-if="!isExploding">💖</view>
+    <view class="reward-overlay" :class="{ 'active': showRewardAnimation }">
+      <!-- 梦幻光斑背景 -->
+      <view class="dreamy-bg" v-if="showRewardAnimation"></view>
+
+      <!-- 飞行的心和拖尾 -->
+      <view class="fly-heart-wrap" :class="{ 'fly': isFlying }" v-if="!isExploding && showRewardAnimation">
+        <view class="fly-heart">💖</view>
+        <view class="tail-sparks">
+          <text v-for="i in 5" :key="i" class="spark" :style="getSparkStyle(i)">✨</text>
+        </view>
+      </view>
       
       <!-- 爆炸粒子 -->
       <view class="explosion" v-if="isExploding">
-        <text v-for="i in 8" :key="i" class="particle" :style="getParticleStyle(i)">❤️</text>
+        <text v-for="i in 12" :key="i" class="particle" :style="getParticleStyle(i)">❤️</text>
       </view>
 
       <!-- 奖励文字 -->
-      <view class="reward-text" :class="{ 'show': isExploding }">
+      <view class="reward-text" :class="{ 'show': showRewardText }">
         宝贝奖励了你 <text class="highlight">+{{ rewardAmount }}</text> 积分 ❤️
       </view>
     </view>
@@ -59,6 +67,12 @@
     <!-- 等待对方处理 -->
     <view class="switch-notify waiting" v-else-if="hasPendingSwitch && isApplicant">
       <view class="text">⏳ 已发送角色互换申请，等待 TA 同意哦～</view>
+    </view>
+
+    <!-- 收到奖励通知 -->
+    <view class="switch-notify reward-notify" v-if="pendingReward > 0">
+      <view class="text">🎁 宝贝刚刚给管家点赞，奖励了你 <text style="color:#FF1493;font-weight:bold;">{{ pendingReward }}</text> 积分！</view>
+      <view class="btn primary" @click="triggerRewardAnimation">点击拆开</view>
     </view>
 
     <!-- 积分卡片 (Pet可见，因为现在积分真正属于Pet了) -->
@@ -240,7 +254,9 @@ const albumCoverStyle = computed(() => {
 const showRewardAnimation = ref(false);
 const isFlying = ref(false);
 const isExploding = ref(false);
+const showRewardText = ref(false);
 const rewardAmount = ref(0);
+const pendingReward = ref(0);
 
 const showEditNickname = ref(false);
 const tempNickname = ref('');
@@ -321,8 +337,8 @@ function uploadSingleFile(path: string): Promise<string> {
 }
 
 function getParticleStyle(i: number) {
-  const angle = (i * 45) * (Math.PI / 180);
-  const radius = 120; // 扩散半径 rpx
+  const angle = (i * 30) * (Math.PI / 180);
+  const radius = 150; // 扩散半径 rpx
   const x = Math.cos(angle) * radius;
   const y = Math.sin(angle) * radius;
   return `
@@ -332,25 +348,57 @@ function getParticleStyle(i: number) {
   `;
 }
 
+function getSparkStyle(i: number) {
+  const angle = (i * 72) * (Math.PI / 180);
+  const x = Math.cos(angle) * 60;
+  const y = Math.sin(angle) * 60;
+  return `
+    --tx: ${x}rpx;
+    --ty: ${y}rpx;
+    animation-delay: ${Math.random() * 0.5}s;
+  `;
+}
+
+function triggerRewardAnimation() {
+  const amount = pendingReward.value;
+  pendingReward.value = 0;
+  playRewardAnimation(amount);
+}
+
 async function playRewardAnimation(amount: number) {
   rewardAmount.value = amount;
   showRewardAnimation.value = true;
   isFlying.value = false;
   isExploding.value = false;
+  showRewardText.value = false;
+
+  // 播放轻柔叮～音效
+  try {
+    const innerAudioContext = uni.createInnerAudioContext();
+    innerAudioContext.src = 'https://www.soundjay.com/buttons/sounds/button-09.mp3';
+    innerAudioContext.play();
+  } catch(e) {}
 
   setTimeout(() => { isFlying.value = true; }, 100);
 
   setTimeout(() => {
     isExploding.value = true;
+    showRewardText.value = true;
     setTimeout(async () => {
       showRewardAnimation.value = false;
+      showRewardText.value = false;
+
+      // 触发积分卡片数字高亮跳动
+      pointsStore.highlightOwnerPoints = true;
+      setTimeout(() => { pointsStore.highlightOwnerPoints = false; }, 1500);
+
       try { await userApi.clearUnreadReward(); } catch {}
       // Update local store to reflect the cleared status to prevent re-trigger on immediate navigation
       if (user.info) {
         user.setLogin(user.token, { ...user.info, hasUnreadReward: 0 }, user.bound);
       }
-    }, 2500);
-  }, 1100);
+    }, 3000);
+  }, 1300); // 1.2s duration for flying
 }
 
 async function load() {
@@ -372,7 +420,7 @@ async function load() {
     
     // Check for unread rewards for Owner
     if (me.user.roleInCouple === 'owner' && me.user.hasUnreadReward > 0) {
-      playRewardAnimation(me.user.hasUnreadReward);
+      pendingReward.value = me.user.hasUnreadReward;
     }
   } catch {}
 }
@@ -598,68 +646,110 @@ function onLogout() {
   position: fixed; inset: 0; z-index: 999;
   pointer-events: none;
   display: flex; justify-content: center; align-items: center;
+  opacity: 0; transition: opacity 0.3s;
+  &.active { opacity: 1; }
 }
 
-.fly-heart {
-  font-size: 120rpx;
+.dreamy-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(255,182,193,0.3) 0%, rgba(255,255,255,0) 70%);
+  animation: pulseBg 2s infinite alternate;
+}
+
+@keyframes pulseBg {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.1); }
+}
+
+.fly-heart-wrap {
   position: absolute;
-  top: 60%; left: 50%;
-  transform: translate(-50%, -50%) scale(0.2);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
   opacity: 0;
-  transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
-  filter: drop-shadow(0 0 20rpx rgba(255,105,180,0.8));
+  transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  .fly-heart {
+    font-size: 160rpx;
+    filter: drop-shadow(0 0 40rpx rgba(255,105,180,0.9));
+    animation: heartbeat 1s infinite alternate;
+  }
+  
+  .tail-sparks {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
   
   &.fly {
     opacity: 1;
-    /* 飞向左上角头像，位置大约为 top 110rpx, left 110rpx */
-    transform: translate(calc(-50vw + 110rpx), calc(-60vh + 110rpx)) scale(1.5) rotate(-15deg);
+    /* 飞向左上角头像 (大约120rpx, 120rpx) */
+    transform: translate(calc(-50vw + 120rpx), calc(-50vh + 120rpx)) scale(0.8) rotate(-15deg);
+    
+    .tail-sparks {
+      opacity: 1;
+      .spark {
+        position: absolute; font-size: 30rpx;
+        animation: sparkTail 0.8s linear infinite;
+      }
+    }
   }
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1) rotate(5deg); }
+}
+
+@keyframes sparkTail {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0.5); opacity: 0; }
 }
 
 .explosion {
   position: absolute;
-  left: 110rpx; top: 110rpx;
+  left: 120rpx; top: 120rpx;
   .particle {
     position: absolute;
-    font-size: 40rpx;
-    top: -20rpx; left: -20rpx;
+    font-size: 50rpx;
+    top: -25rpx; left: -25rpx;
     opacity: 0;
-    animation: explode 0.8s ease-out forwards;
+    animation: explode 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   }
 }
 
 @keyframes explode {
   0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; }
-  100% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(45deg); opacity: 0; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(720deg); opacity: 0; }
 }
 
 .reward-text {
   position: absolute;
-  top: 45%;
-  font-size: 34rpx; font-weight: bold; color: #FF6FA0;
+  top: 60%;
+  font-size: 36rpx; font-weight: bold; color: #FF6FA0;
   opacity: 0;
-  transform: translateY(40rpx);
-  transition: all 0.5s ease-out;
+  transform: translateY(60rpx) scale(0.9);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   background: rgba(255,255,255,0.95);
-  padding: 24rpx 48rpx; border-radius: 999rpx;
-  box-shadow: 0 10rpx 40rpx var(--card-shadow);
-  border: 2rpx solid var(--bg-color);
+  padding: 30rpx 50rpx; border-radius: 999rpx;
+  box-shadow: 0 10rpx 40rpx rgba(255, 105, 180, 0.3);
+  border: 2rpx solid #FFB6C1;
+  text-align: center;
   
   &.show {
     opacity: 1;
-    transform: translateY(0);
-    animation: bounceText 2s infinite;
+    transform: translateY(0) scale(1);
+    animation: floatText 3s infinite;
   }
   .highlight { 
-    font-size: 56rpx; color: #FF1493; margin: 0 12rpx; 
+    font-size: 64rpx; color: #FF1493; margin: 0 16rpx; 
     display: inline-block;
     animation: pulsePoints 1s infinite alternate;
   }
 }
 
-@keyframes bounceText {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12rpx); }
+@keyframes floatText {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15rpx) scale(1.02); }
 }
 
 @keyframes pulsePoints {

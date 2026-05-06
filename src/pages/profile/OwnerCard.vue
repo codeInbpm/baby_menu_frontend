@@ -12,7 +12,9 @@
       <view class="card-content">
         <view class="label">本月荣誉奖励积分</view>
         <view class="points-display">
-          <text class="num">{{ info?.currentPoints ? Number(info.currentPoints) : 0 }}</text>
+          <text class="num" :class="{ 'highlight-jump': pointsStore.highlightOwnerPoints }">
+            {{ info?.currentPoints ? Number(info.currentPoints) : 0 }}
+          </text>
           <text class="limit">分</text>
         </view>
         
@@ -159,6 +161,20 @@ async function confirmAllocate() {
     opacity: 0.8;
     margin-left: 12rpx;
   }
+}
+
+.highlight-jump {
+  animation: numJump 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #FF1493 !important;
+  text-shadow: 0 0 20rpx rgba(255, 20, 147, 0.8) !important;
+}
+
+@keyframes numJump {
+  0% { transform: translateY(0) scale(1); }
+  20% { transform: translateY(-20rpx) scale(1.3); }
+  50% { transform: translateY(0) scale(1); }
+  70% { transform: translateY(-10rpx) scale(1.15); }
+  100% { transform: translateY(0) scale(1); }
 }
 
 .hint-text {

@@ -14,6 +14,7 @@ export const usePointsStore = defineStore('points', {
   state: () => ({
     info: null as PointsInfo | null,
     transactions: [] as any[],
+    highlightOwnerPoints: false,
   }),
   actions: {
     async fetchInfo() {
