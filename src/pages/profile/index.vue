@@ -124,6 +124,7 @@
         <text>申请角色互换</text><text class="arrow">›</text>
       </view>
 <!--      <view class="row" @click="goRequests"><text>我的请求</text><text class="arrow">›</text></view>-->
+      <view class="row" @click="goSubscribe"><text>订阅消息设置</text></view>
       <view v-if="user.bound" class="row danger" @click="onUnbind"><text>解除绑定</text></view>
       <view class="row danger" @click="onLogout"><text>退出登录</text></view>
     </view>
@@ -178,7 +179,7 @@ const titleStore = useTitleStore();
 const mainMemorialInfo = computed(() => {
   const item = user.mainMemorial;
   if (!item) return null;
-  
+
   let title = item.title;
   if (item.userId && item.userId !== user.info?.id) {
     if (title.includes('我的')) {
@@ -290,7 +291,7 @@ async function onChooseAvatar(e: any) {
     uni.showToast({ title: '获取头像路径失败', icon: 'none' });
     return;
   }
-  
+
   uni.showLoading({ title: '上传头像...' });
   try {
     const uploadedUrl = await uploadSingleFile(avatarUrl);
@@ -421,7 +422,7 @@ async function load() {
       pointsStore.fetchTransactions();
       titleStore.fetchCurrentTitle();
     }
-    
+
     // Check for unread rewards for Owner
     if (me.user.roleInCouple === 'owner' && me.user.hasUnreadReward > 0) {
       pendingReward.value = me.user.hasUnreadReward;
@@ -496,6 +497,8 @@ function onLogout() {
   user.logout();
   uni.reLaunch({ url: '/pages/login/index' });
 }
+function goSubscribe() { uni.navigateTo({ url: '/pages/princess/subscribe' }); }
+
 </script>
 
 <style lang="scss" scoped>

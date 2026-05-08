@@ -55,7 +55,13 @@
           <view class="desc" v-else>永久有效</view>
         </view>
         <view class="action">
-          <view class="status-tag used" v-if="inv.status === 1">已使用</view>
+          <view class="status-tag used" v-if="inv.status === 1 && inv.itemType !== 1">已使用</view>
+          <template v-else-if="inv.itemType === 1 && inv.status === 1">
+             <view class="remind-group">
+               <text class="remind-status">已提醒</text>
+               <button class="btn-remind" @click="handleRemind(inv)">再次提醒</button>
+             </view>
+          </template>
           <button v-else class="btn-use" @click="handleUse(inv)">立即使用</button>
         </view>
       </view>
@@ -121,17 +127,36 @@ function handleRedeem(item: any) {
 
 function handleUse(inv: any) {
   uni.showModal({
-    title: '确认使用',
-    content: `确定要使用【${inv.itemName}】吗？`,
+    title: '确认激活',
+    content: inv.itemType === 1 ? '确认立即激活【公主主动服务卡】吗？激活后系统会马上发送高优先级提醒给公主！' : `确定要使用【${inv.itemName}】吗？`,
     success: async (res) => {
       if (res.confirm) {
-        uni.showLoading({ title: '使用中' });
+        uni.showLoading({ title: '处理中' });
         try {
           await mallApi.useItem(inv.id);
-          uni.showToast({ title: '使用成功！', icon: 'success' });
+          uni.showToast({ title: '已成功激活并提醒！', icon: 'success' });
           loadData();
         } catch (e: any) {
-          uni.showToast({ title: e.message || '使用失败', icon: 'none' });
+          uni.showToast({ title: e.message || '操作失败', icon: 'none' });
+        }
+      }
+    }
+  });
+}
+
+function handleRemind(inv: any) {
+  uni.showModal({
+    title: '再次提醒公主',
+    content: '公主可能在忙没有看到哦，确定要再发送一次强力提醒吗？（每张卡最多可再提醒2次）',
+    success: async (res) => {
+      if (res.confirm) {
+        uni.showLoading({ title: '发送中' });
+        try {
+          await mallApi.remind(inv.id);
+          uni.showToast({ title: '提醒已再次发送！', icon: 'success' });
+          loadData();
+        } catch (e: any) {
+          uni.showToast({ title: e.message || '发送失败', icon: 'none' });
         }
       }
     }
@@ -342,6 +367,30 @@ function formatDate(ds: string) {
       line-height: 64rpx;
       border-radius: 32rpx;
       font-weight: bold;
+    }
+    
+    .remind-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10rpx;
+      
+      .remind-status {
+        font-size: 22rpx;
+        color: #00E5FF;
+      }
+      
+      .btn-remind {
+        background: rgba(0,229,255,0.1);
+        color: #00E5FF;
+        border: 1px solid rgba(0,229,255,0.3);
+        font-size: 24rpx;
+        padding: 0 24rpx;
+        height: 50rpx;
+        line-height: 48rpx;
+        border-radius: 25rpx;
+        &::after { display: none; }
+      }
     }
     
     .status-tag {

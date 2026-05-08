@@ -23,6 +23,11 @@
         </view>
       </view>
 
+      <!-- 主动宠爱模式提示 -->
+      <view v-if="isFreeForPrincess" class="free-mode-banner">
+        💖 主动宠爱管家模式 (本次免积分)
+      </view>
+
       <!-- 第二行：当前分类标签 + 管理菜谱 + 添加菜谱 + 搜索 -->
       <view class="cat-bar">
         <view class="cur-cat">{{ currentCategoryName }}</view>
@@ -102,6 +107,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import { menuApi, requestApi, userApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useCartStore } from '@/store/cart';
 import { useUserStore } from '@/store/user';
@@ -114,6 +120,16 @@ const items = ref<any[]>([]);
 const currentCategoryId = ref<number | null>(null);
 const keyword = ref('');
 const confirmShow = ref(false);
+
+const isFreeForPrincess = ref(false);
+const currentCardId = ref<number | null>(null);
+
+onLoad((options) => {
+  if (options?.from === 'princessServiceCard' && options?.cardId) {
+    isFreeForPrincess.value = true;
+    currentCardId.value = Number(options.cardId);
+  }
+});
 
 const defaultImg = '/static/dish_placeholder.png';
 const coupleAvatar = computed(() => user.info?.avatar || '/static/love.png');
@@ -194,11 +210,21 @@ async function sendRequest() {
   }
   uni.showLoading({ title: '发送中…' });
   try {
-    await requestApi.create(cart.ids);
+    const params: any = { itemIds: cart.ids };
+    if (isFreeForPrincess.value) {
+      params.isFreeForPrincess = true;
+      params.cardId = currentCardId.value;
+    }
+    await requestApi.create(params);
     uni.hideLoading();
     confirmShow.value = false;
     cart.clear();
-    uni.showToast({ title: '已通知宝贝 ❤️', icon: 'success' });
+    uni.showToast({ title: '已通知管家 ❤️', icon: 'success' });
+    if (isFreeForPrincess.value) {
+      setTimeout(() => {
+        uni.switchTab({ url: '/pages/request/list' });
+      }, 1500);
+    }
   } catch {
     uni.hideLoading();
   }
@@ -404,5 +430,19 @@ page {
 .modal-btn.ghost { background: #f4f4f4; color: #666; }
 .modal-btn.primary {
   background: var(--gradient); color: #fff; font-weight: 600;
+}
+
+/* ===== free mode banner ===== */
+.free-mode-banner {
+  background: linear-gradient(90deg, #FFF0F6, #FFE4E1);
+  color: #FF1493;
+  padding: 16rpx 28rpx;
+  margin: 0 28rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(255, 20, 147, 0.1);
+  border: 2rpx solid #FFC0CB;
 }
 </style>

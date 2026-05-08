@@ -3,7 +3,8 @@ import { useUserStore } from '@/store/user';
 
 // !!! 部署时改成你自己的后端地址
 // export const BASE_URL = 'https://your-domain.com/api';
-export const BASE_URL = 'http://127.0.0.1:8080/api';
+// export const BASE_URL = 'http://127.0.0.1:8080/api';
+export const BASE_URL = 'http://192.168.110.55:8080/api';
 // 本地调试可用： http://127.0.0.1:8080/api （需开启微信开发者工具的「不校验合法域名」）
 
 export interface ApiResp<T = any> {

@@ -62,6 +62,12 @@
     {
       "path": "pages/mall/index",
       "style": { "navigationBarTitleText": "积分商城", "navigationBarBackgroundColor": "#0f1220", "navigationBarTextStyle": "white" }
+    },
+    {
+      "path": "pages/princess/subscribe",
+      "style": {
+        "navigationBarTitleText": "订阅设置"
+      }
     }
   ],
   "globalStyle": {

@@ -31,7 +31,11 @@ export const menuApi = {
 };
 
 export const requestApi = {
-  create: (itemIds: number[]) => request({ url: '/request', method: 'POST', data: { itemIds } }),
+  create: (data: any) => {
+    // 兼容原来的传参方式（如果传入的是数组，则包装为对象）
+    const payload = Array.isArray(data) ? { itemIds: data } : data;
+    return request({ url: '/request', method: 'POST', data: payload });
+  },
   list:   (status?: number)   => request<any[]>({ url: '/request', params: { status } }),
   detail: (id: number)        => request<any>({ url: `/request/${id}` }),
   accept: (id: number)        => request({ url: `/request/${id}/accept`, method: 'POST' }),
@@ -105,9 +109,10 @@ export const mallApi = {
   redeem: (id: number) => request({ url: `/mall/redeem/${id}`, method: 'POST' }),
   inventory: () => request<any[]>({ url: '/mall/inventory' }),
   useItem: (id: number, extraParams?: any) => request({ url: `/mall/use/${id}`, method: 'POST', data: extraParams }),
+  remind: (id: number) => request({ url: `/mall/remind/${id}`, method: 'POST' }),
 };
 
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID
-export const SUBSCRIBE_TEMPLATE_ID = '9GAg4lS81ULSg8ZBF0Ot3WMtntNQrnYhXAkUQXaNgNes';
+export const SUBSCRIBE_TEMPLATE_ID = 'bcMzwddS-N1kX6edujEwu1pDmt0rXPYCXhCzD7HdAhk';
