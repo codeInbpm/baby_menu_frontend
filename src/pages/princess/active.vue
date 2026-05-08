@@ -12,31 +12,16 @@
 
 <script setup lang="ts">
 import { onLoad } from '@dcloudio/uni-app';
-import { SUBSCRIBE_TEMPLATE_ID } from '@/api';
+import { requestSubscribe } from '@/utils/subscribe';
 
 // 读取卡片ID，若未传入则直接返回
 let cardId: number | null = null;
-let hasSubscribed = false;
 
 onLoad((options) => {
   if (options?.cardId) {
     cardId = Number(options.cardId);
   }
 });
-
-async function requestSubscribe(): Promise<boolean> {
-  // @ts-ignore
-  const result = await new Promise<any>((resolve, reject) => {
-    uni.requestSubscribeMessage({
-      tmplIds: [SUBSCRIBE_TEMPLATE_ID],
-      success: resolve,
-      fail: reject,
-    });
-  });
-  const accepted = result[SUBSCRIBE_TEMPLATE_ID] === 'accept';
-  hasSubscribed = accepted;
-  return accepted;
-}
 
 async function startFreeMode() {
   if (!cardId) {
@@ -45,8 +30,8 @@ async function startFreeMode() {
   }
   const ok = await requestSubscribe();
   if (!ok) {
-    uni.showToast({ title: '请授权订阅消息后再继续', icon: 'none' });
-    return;
+    uni.showToast({ title: '建议开启消息订阅，以免错过管家的提醒哦', icon: 'none' });
+    // 这里不再强制中断，因为用户可能已经通过其他方式订阅或不想订阅，但为了体验最好还是提醒
   }
   // 跳转到菜单页面并携带参数，后端会识别免积分模式
   uni.navigateTo({

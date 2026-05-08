@@ -169,6 +169,8 @@ import TitleEntryCard from './TitleEntryCard.vue';
 import BucketEntryCard from './BucketEntryCard.vue';
 import PeriodModule from './PeriodModule.vue';
 import { useTitleStore } from '@/store/title';
+import { requestSubscribe } from '@/utils/subscribe';
+import { useSubscribeGuide } from '@/utils/subscribeGuide';
 import dayjs from 'dayjs';
 import { Lunar } from 'lunar-javascript';
 
@@ -427,6 +429,9 @@ async function load() {
     if (me.user.roleInCouple === 'owner' && me.user.hasUnreadReward > 0) {
       pendingReward.value = me.user.hasUnreadReward;
     }
+
+    const { checkAndPrompt } = useSubscribeGuide('profile', 1000);
+    checkAndPrompt();
   } catch {}
 }
 onShow(load);
@@ -497,7 +502,14 @@ function onLogout() {
   user.logout();
   uni.reLaunch({ url: '/pages/login/index' });
 }
-function goSubscribe() { uni.navigateTo({ url: '/pages/princess/subscribe' }); }
+async function goSubscribe() {
+  const ok = await requestSubscribe();
+  if (ok) {
+    uni.showToast({ title: '订阅成功 ❤️', icon: 'success' });
+  } else {
+    uni.showToast({ title: '已取消或订阅失败', icon: 'none' });
+  }
+}
 
 </script>
 

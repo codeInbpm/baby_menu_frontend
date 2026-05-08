@@ -74,6 +74,8 @@
 import { ref, onMounted } from 'vue';
 import { useUserStore } from '@/store/user';
 import { mallApi, userApi } from '@/api';
+import { requestSubscribe } from '@/utils/subscribe';
+import { useSubscribeGuide } from '@/utils/subscribeGuide';
 
 const user = useUserStore();
 const currentTab = ref(0);
@@ -100,6 +102,9 @@ async function loadData() {
   } finally {
     uni.hideLoading();
   }
+  
+  const { checkAndPrompt } = useSubscribeGuide('mall');
+  checkAndPrompt();
 }
 
 function handleRedeem(item: any) {
