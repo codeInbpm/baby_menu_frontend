@@ -10,9 +10,12 @@
           <text class="name">{{ c.name }}</text>
           <text class="icon">{{ c.icon }}</text>
         </view>
-        <view class="ops">
+        <view class="ops" v-if="c.coupleId !== 0">
           <text class="op" @click="onEdit(c)">编辑</text>
           <text class="op danger" @click="onDel(c)">删除</text>
+        </view>
+        <view class="ops" v-else>
+          <text class="tag-global">公共</text>
         </view>
       </view>
     </view>
@@ -85,6 +88,7 @@ onMounted(load);
 .info .icon { font-size: 30rpx; }
 .ops .op { font-size: 26rpx; color: #FF6FA0; margin-left: 24rpx; }
 .ops .op.danger { color: #ff5b5b; }
+.tag-global { font-size: 24rpx; color: #999; background: #eee; padding: 4rpx 12rpx; border-radius: 4rpx; }
 
 .mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 999; }
 .dialog { width: 600rpx; background: #fff; border-radius: 24rpx; padding: 32rpx; }
