@@ -143,8 +143,8 @@ function chooseMedia() {
               header: { 'Authorization': `Bearer ${token}` },
               success: (uploadResult) => {
                 const data = JSON.parse(uploadResult.data);
-                if (data.code === 200) resolve(data.data);
-                else reject(data.msg);
+                if (data.code === 0) resolve(data.data.url);
+                else reject(data.message || data.msg);
               },
               fail: reject
             });

@@ -23,23 +23,27 @@ import { useUserStore } from '@/store/user';
 const user = useUserStore();
 
 async function handleLogin() {
+  let nickname = '微信用户';
+  let avatar = '';
+  let gender = 0;
+  
+  try {
+    // 必须在点击事件的同步调用栈中立即触发 getUserProfile，否则会因为失去手势上下文而报错
+    const p: any = await new Promise((res, rej) =>
+      uni.getUserProfile({ desc: '获取您的昵称和头像', success: res, fail: rej })
+    );
+    nickname = p.userInfo?.nickName || nickname;
+    avatar = p.userInfo?.avatarUrl || '';
+    gender = p.userInfo?.gender || 0;
+  } catch (e) {
+    console.warn("获取微信信息失败", e);
+  }
+
   uni.showLoading({ title: '登录中…' });
   try {
     const { code } = await new Promise<UniApp.LoginRes>((resolve, reject) =>
       uni.login({ provider: 'weixin', success: resolve, fail: reject })
     );
-    // 获取用户资料（新版小程序需要 button open-type=chooseAvatar / getUserProfile）
-    let nickname = '宝贝';
-    let avatar = '';
-    let gender = 0;
-    try {
-      const p: any = await new Promise((res, rej) =>
-        uni.getUserProfile({ desc: '用于完善用户资料', success: res, fail: rej })
-      );
-      nickname = p.userInfo?.nickName || nickname;
-      avatar = p.userInfo?.avatarUrl || '';
-      gender = p.userInfo?.gender || 0;
-    } catch {}
 
     const resp = await authApi.login({ code, nickname, avatar, gender });
     user.setLogin(resp.token, resp.user, resp.bound);

@@ -6,6 +6,32 @@
     </view>
 
     <view class="card">
+      <view class="card-title">选择我的角色</view>
+      <view class="role-selection" style="margin-bottom: 0;">
+        <view class="role-grid">
+          <view 
+            class="role-item" 
+            :class="{ active: selectedRole === 'pet' }" 
+            @click="selectedRole = 'pet'"
+          >
+            <view class="role-icon">👸</view>
+            <view class="role-name">我是公主</view>
+            <view class="role-tag">Pet</view>
+          </view>
+          <view 
+            class="role-item" 
+            :class="{ active: selectedRole === 'owner' }" 
+            @click="selectedRole = 'owner'"
+          >
+            <view class="role-icon">🤵</view>
+            <view class="role-name">我是管家</view>
+            <view class="role-tag">Owner</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
       <view class="card-title">我要邀请 TA</view>
       <button v-if="!myCode" class="btn-primary" @click="generateCode">生成邀请码</button>
       
@@ -15,7 +41,8 @@
         <view class="hint">有效期 7 天，请尽快绑定</view>
         
         <view class="qr-section">
-          <canvas canvas-id="qrcode" id="qrcode" class="qr-canvas" />
+          <image v-if="qrCodeImage" :src="qrCodeImage" :show-menu-by-longpress="true" class="qr-canvas" />
+          <view v-else class="qr-canvas"></view>
           <view class="qr-tip">长按或截图保存二维码分享</view>
         </view>
 
@@ -39,32 +66,11 @@
         <view class="input-hint" v-if="inputCode">准备好绑定了吗？✨</view>
       </view>
 
-      <view class="role-selection">
-        <view class="role-title">选择我的角色</view>
-        <view class="role-grid">
-          <view 
-            class="role-item" 
-            :class="{ active: selectedRole === 'pet' }" 
-            @click="selectedRole = 'pet'"
-          >
-            <view class="role-icon">👸</view>
-            <view class="role-name">我是公主</view>
-            <view class="role-tag">Pet</view>
-          </view>
-          <view 
-            class="role-item" 
-            :class="{ active: selectedRole === 'owner' }" 
-            @click="selectedRole = 'owner'"
-          >
-            <view class="role-icon">🤵</view>
-            <view class="role-name">我是管家</view>
-            <view class="role-tag">Owner</view>
-          </view>
-        </view>
-      </view>
-
       <button class="btn-primary" @click="bind">立即绑定</button>
     </view>
+
+    <!-- 隐藏的 canvas 用于生成二维码 -->
+    <canvas v-if="showCanvas" canvas-id="qrcode" id="qrcode" style="width: 300px; height: 300px; position: fixed; left: -9999px;" />
 
     <!-- 降级方案弹窗 -->
     <wd-popup v-model="showShareModal" position="center" closable custom-style="padding: 40rpx; border-radius: 24rpx; width: 80%;">
@@ -90,7 +96,9 @@ import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { coupleApi } from '@/api';
 
 const myCode = ref('');
+const qrCodeImage = ref('');
 const inputCode = ref('');
+const showCanvas = ref(false);
 const selectedRole = ref('pet'); // 默认选中公主
 const showShareModal = ref(false);
 
@@ -98,7 +106,9 @@ const showShareModal = ref(false);
 onLoad((options) => {
   if (options.inviteCode) {
     inputCode.value = options.inviteCode;
-    uni.showToast({ title: '已自动填充邀请码 ✨', icon: 'none' });
+    if (options.role === 'pet') selectedRole.value = 'owner';
+    else if (options.role === 'owner') selectedRole.value = 'pet';
+    uni.showToast({ title: '已自动填充邀请码和角色 ✨', icon: 'none' });
   }
 });
 
@@ -106,7 +116,7 @@ onLoad((options) => {
 onShareAppMessage((res) => {
   return {
     title: '来和我一起开启专属情侣菜单吧 ❤️',
-    path: `/pages/bind/index?inviteCode=${myCode.value}`,
+    path: `/pages/bind/index?inviteCode=${myCode.value}&role=${selectedRole.value}`,
     imageUrl: '/static/share-card.png',
     desc: '我已经为你准备好了专属菜单，快来绑定成为我的宝贝～'
   };
@@ -116,7 +126,7 @@ onShareAppMessage((res) => {
 onShareTimeline(() => {
   return {
     title: '属于我们的浪漫空间，等一个 TA 来绑定 ❤️',
-    query: `inviteCode=${myCode.value}`,
+    query: `inviteCode=${myCode.value}&role=${selectedRole.value}`,
     imageUrl: '/static/share-card.png'
   };
 });
@@ -126,6 +136,7 @@ async function generateCode() {
   try {
     const r = await coupleApi.invite();
     myCode.value = r.code;
+    showCanvas.value = true;
     setTimeout(drawQrcode, 100);
   } finally {
     uni.hideLoading();
@@ -147,7 +158,17 @@ function drawQrcode() {
   ctx.setFontSize(14);
   ctx.setFillStyle('#333');
   ctx.fillText(myCode.value, 110, 290);
-  ctx.draw();
+  ctx.draw(false, () => {
+    setTimeout(() => {
+      uni.canvasToTempFilePath({
+        canvasId: 'qrcode',
+        success: (res) => {
+          qrCodeImage.value = res.tempFilePath;
+          showCanvas.value = false;
+        }
+      });
+    }, 100);
+  });
 }
 
 function copyCode() {
@@ -159,7 +180,7 @@ function copyCode() {
 
 function copyLink() {
   // 兜底方案：一键复制完整链接
-  const link = `pages/bind/index?inviteCode=${myCode.value}`;
+  const link = `pages/bind/index?inviteCode=${myCode.value}&role=${selectedRole.value}`;
   uni.setClipboardData({ 
     data: link,
     success: () => uni.showToast({ title: '分享路径已复制' })
@@ -189,7 +210,7 @@ async function bind() {
   background: #fffafa;
   min-height: 100vh;
 }
-.header { text-align: center; padding: 40rpx 0 60rpx; }
+.header { text-align: center; padding: 40rpx 0 60rpx; transform: translateZ(0); }
 .title { font-size: 44rpx; color: #FF6FA0; font-weight: 700; }
 .subtitle { font-size: 26rpx; color: #999; margin-top: 14rpx; }
 
@@ -199,6 +220,7 @@ async function bind() {
   padding: 40rpx;
   margin-bottom: 32rpx;
   box-shadow: 0 8rpx 30rpx rgba(255, 111, 160, 0.1);
+  transform: translateZ(0);
 }
 .card-title { 
   font-size: 32rpx; 
@@ -278,7 +300,7 @@ async function bind() {
     background: #FFF5F8; border-radius: 20rpx; padding: 28rpx;
     font-size: 32rpx; letter-spacing: 8rpx; text-align: center;
     border: 2rpx solid transparent;
-    transition: all 0.3s;
+    transition: border-color 0.3s;
     &:focus { border-color: #FF6FA0; }
   }
   .input-hint { font-size: 22rpx; color: #FF6FA0; text-align: center; margin-top: 8rpx; }
@@ -291,7 +313,7 @@ async function bind() {
   .role-item {
     flex: 1; background: #f9f9f9; border-radius: 24rpx; padding: 30rpx 20rpx;
     display: flex; flex-direction: column; align-items: center;
-    border: 4rpx solid transparent; transition: all 0.3s;
+    border: 4rpx solid transparent; transition: background-color 0.3s, border-color 0.3s;
     &.active {
       background: #FFF0F5; border-color: #FF6FA0;
       .role-icon { transform: scale(1.1); }
@@ -299,7 +321,7 @@ async function bind() {
     }
   }
   .role-icon { font-size: 60rpx; margin-bottom: 12rpx; transition: transform 0.3s; }
-  .role-name { font-size: 28rpx; color: #333; margin-bottom: 4rpx; }
+  .role-name { font-size: 28rpx; color: #333; margin-bottom: 4rpx; transition: color 0.3s; }
   .role-tag { font-size: 20rpx; color: #999; }
 }
 
