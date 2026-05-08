@@ -35,6 +35,7 @@
               <wd-icon name="lock" size="16px" color="rgba(255,255,255,0.4)" />
             </view>
             
+            <TitleIcon :iconCode="title.icon || ('icon_' + title.titleCode.toLowerCase())" :rarity="title.level" :size="48" class="card-icon" :style="{ opacity: title.unlocked ? 1 : 0.5, filter: title.unlocked ? 'none' : 'grayscale(100%)' }" />
             <view class="title-name">{{ title.titleName }}</view>
             <view class="unlock-info">
               <text v-if="title.unlocked">{{ title.unlockTime.split(' ')[0] }} 解锁</text>
@@ -49,9 +50,10 @@
     <wd-popup v-model="showDetail" position="bottom" custom-class="detail-popup" :safe-area-inset-bottom="true">
       <view class="detail-content" v-if="selectedTitle">
         <view class="detail-header">
-          <view class="title-icon" :class="selectedTitle.level">
-            {{ selectedTitle.titleName }}
+          <view class="title-icon-wrapper">
+            <TitleIcon :iconCode="selectedTitle.icon || ('icon_' + selectedTitle.titleCode.toLowerCase())" :rarity="selectedTitle.level" :size="80" />
           </view>
+          <view class="title-name-large">{{ selectedTitle.titleName }}</view>
           <view class="level-badge" :class="selectedTitle.level">
             {{ getLevelName(selectedTitle.level) }}
           </view>
@@ -95,6 +97,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useTitleStore } from '@/store/title';
 import { useToast } from 'wot-design-uni';
+import TitleIcon from '@/components/TitleIcon/TitleIcon.vue';
 
 const titleStore = useTitleStore();
 const toast = useToast();
@@ -233,20 +236,25 @@ function formatCondition(jsonStr: string) {
 }
 
 .title-card {
-  height: 160rpx;
-  border-radius: 24rpx;
-  padding: 30rpx;
+  height: 240rpx;
+  border-radius: 28rpx;
+  padding: 24rpx;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
   background: #FFF;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   
   &:active { transform: scale(0.96); }
+
+  .card-icon {
+    margin-bottom: 16rpx;
+    z-index: 2;
+  }
 
   .title-name {
     font-size: 28rpx;
@@ -265,30 +273,45 @@ function formatCondition(jsonStr: string) {
 
   /* 等级样式 */
   &.rare {
-    background: linear-gradient(135deg, #FFF8F0 0%, #FFF 100%);
+    background: linear-gradient(135deg, #FFF8F0 0%, #FFFDF5 100%);
     border: 2rpx solid #FFE4B5;
-    .title-name { color: #CD853F; }
+    box-shadow: 0 6rpx 20rpx rgba(205, 133, 63, 0.15);
+    .title-name { color: #D2691E; text-shadow: 0 2rpx 4rpx rgba(210,105,30,0.1); }
+    &::before {
+      content: ''; position: absolute; top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%);
+      transform: translateX(-100%);
+      animation: sweep-shine 4s infinite;
+    }
   }
   
   &.legend {
-    background: linear-gradient(135deg, #FFF0F5 0%, #FFF 100%);
+    background: linear-gradient(135deg, #FFF0F5, #F0F8FF, #FFFFF0);
+    background-size: 200% 200%;
     border: 2rpx solid #FFB6C1;
-    box-shadow: 0 0 20rpx rgba(255,182,193,0.3);
-    .title-name { color: #FF1493; }
+    box-shadow: 0 8rpx 30rpx rgba(255,105,180,0.25);
+    animation: holo-bg 6s ease infinite;
+    
+    .title-name { 
+      color: #FF1493; 
+      text-shadow: 0 2rpx 8rpx rgba(255,20,147,0.2); 
+    }
+    
     &::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, transparent 70%);
-      opacity: 0.5;
-      z-index: 1;
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.9) 0%, transparent 60%);
+      pointer-events: none;
     }
   }
 
   &.locked {
-    background: #F5F5F5;
-    border: none;
-    .title-name { color: #999; }
-    .unlock-info { color: #CCC; }
+    background: #F8F9FA;
+    border: 2rpx dashed #E0E0E0;
+    box-shadow: none;
+    .title-name { color: #A0A0A0; text-shadow: none; }
+    .unlock-info { color: #C0C0C0; }
+    &::before, &::after { display: none; }
   }
 
   &.active {
@@ -323,16 +346,23 @@ function formatCondition(jsonStr: string) {
     align-items: center;
     margin-bottom: 50rpx;
     
-    .title-icon {
-      font-size: 44rpx; font-weight: bold; padding: 20rpx 60rpx;
-      border-radius: 20rpx; background: #F5F5F5; color: #333;
-      margin-bottom: 20rpx;
-      
-      &.rare { background: #FFEBCD; color: #CD853F; }
-      &.legend { 
-        background: #FFB6C1; color: #FFF; 
-        box-shadow: 0 0 30rpx rgba(255,105,180,0.4);
-      }
+    .title-icon-wrapper {
+      margin-bottom: 24rpx;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20rpx;
+      border-radius: 50%;
+      background: #F8F9FA;
+      box-shadow: inset 0 0 20rpx rgba(0,0,0,0.02);
+    }
+    
+    .title-name-large {
+      font-size: 44rpx;
+      font-weight: 900;
+      color: #333;
+      margin-bottom: 12rpx;
+      text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.05);
     }
     
     .level-badge {
