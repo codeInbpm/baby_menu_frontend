@@ -34,7 +34,11 @@
           
           <view class="form-item row">
             <text class="label">分类标签</text>
-            <input class="input" v-model="form.category" placeholder="如：旅行、约会" />
+            <picker mode="selector" :range="categoryList" @change="onCategoryChange">
+              <view class="picker-val" :class="{ placeholder: !form.category }">
+                {{ form.category || '请选择分类标签' }}
+              </view>
+            </picker>
           </view>
           
           <view class="form-item row">
@@ -174,10 +178,13 @@ const showNoteModal = ref(false);
 const tempNote = ref('');
 const showCelebration = ref(false);
 
+const categoryList = ref<string[]>([]);
+
 // Computed for checking if current user has left note
 const hasMyNote = ref(false);
 
 onLoad((options: any) => {
+  loadCategories();
   if (options.action === 'add') {
     isAdd.value = true;
   } else if (options.id) {
@@ -202,6 +209,19 @@ async function loadDetail() {
 
 function goBack() {
   uni.navigateBack();
+}
+
+async function loadCategories() {
+  try {
+    categoryList.value = await bucketApi.tags();
+  } catch (e) {
+    categoryList.value = ['旅行', '约会', '居家', '纪念日', '美食', '其他'];
+  }
+}
+
+function onCategoryChange(e: any) {
+  const index = e.detail.value;
+  form.value.category = categoryList.value[index];
 }
 
 function onDateChange(e: any) {

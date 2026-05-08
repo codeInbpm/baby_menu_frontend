@@ -26,6 +26,25 @@
         </view>
       </view>
 
+      <!-- Filter Bar -->
+      <view class="filter-bar">
+        <picker mode="selector" :range="categoryOptions" @change="onFilterCategory">
+          <view class="filter-item" :class="{ active: filterCategory }">
+            {{ filterCategory || '全部分类' }}
+            <wd-icon name="arrow-down" size="14px" />
+          </view>
+        </picker>
+        <picker mode="selector" :range="yearOptions" @change="onFilterYear">
+          <view class="filter-item" :class="{ active: filterYear }">
+            {{ filterYear ? filterYear + '年' : '全部年份' }}
+            <wd-icon name="arrow-down" size="14px" />
+          </view>
+        </picker>
+        <view class="filter-item clear-btn" v-if="filterCategory || filterYear" @click="clearFilters">
+          <wd-icon name="close" size="14px" /> 清空
+        </view>
+      </view>
+
       <!-- List -->
       <scroll-view 
         scroll-y 
@@ -124,6 +143,45 @@ const hasMore = ref(true);
 const loading = ref(false);
 const isRefreshing = ref(false);
 
+const filterCategory = ref('');
+const filterYear = ref<number | undefined>(undefined);
+
+const categoryOptions = ref<string[]>(['全部分类']);
+const yearOptions = ref<string[]>(['全部年份']);
+
+async function loadFilterOptions() {
+  try {
+    const tags = await bucketApi.tags();
+    categoryOptions.value = ['全部分类', ...tags];
+  } catch (e) {
+    categoryOptions.value = ['全部分类', '旅行', '约会', '居家', '纪念日', '美食', '其他'];
+  }
+  
+  const currentYear = new Date().getFullYear();
+  yearOptions.value = ['全部年份'];
+  for (let i = 0; i < 5; i++) {
+    yearOptions.value.push((currentYear - i).toString());
+  }
+}
+
+function onFilterCategory(e: any) {
+  const index = e.detail.value;
+  filterCategory.value = index == 0 ? '' : categoryOptions.value[index];
+  onRefresh();
+}
+
+function onFilterYear(e: any) {
+  const index = e.detail.value;
+  filterYear.value = index == 0 ? undefined : Number(yearOptions.value[index]);
+  onRefresh();
+}
+
+function clearFilters() {
+  filterCategory.value = '';
+  filterYear.value = undefined;
+  onRefresh();
+}
+
 function switchTab(index: number) {
   if (currentTab.value === index) return;
   currentTab.value = index;
@@ -140,7 +198,7 @@ async function fetchList(isLoadMore = false) {
   
   loading.value = true;
   try {
-    const res = await bucketApi.list(page.value, size, currentTab.value);
+    const res = await bucketApi.list(page.value, size, currentTab.value, filterCategory.value || undefined, filterYear.value);
     if (res) {
       if (isLoadMore) {
         list.value.push(...res.records);
@@ -176,6 +234,7 @@ function loadMore() {
 }
 
 onShow(() => {
+  loadFilterOptions();
   fetchList(false);
   // Optional: fetch count of the other tab if we want accurate badges
   if (currentTab.value === 0) {
@@ -299,6 +358,38 @@ function getAvatar(role: string) {
       border-radius: 20rpx;
       margin-left: 8rpx;
       vertical-align: super;
+    }
+  }
+}
+
+.filter-bar {
+  display: flex;
+  padding: 0 40rpx;
+  margin-bottom: 20rpx;
+  gap: 20rpx;
+  align-items: center;
+  
+  .filter-item {
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    padding: 8rpx 20rpx;
+    border-radius: 999rpx;
+    font-size: 24rpx;
+    color: #666;
+    gap: 8rpx;
+    transition: all 0.3s;
+    
+    &.active {
+      background: #FFF0F6;
+      color: #FF6FA0;
+      border: 1rpx solid #FF6FA0;
+    }
+    
+    &.clear-btn {
+      background: transparent;
+      color: #999;
+      border: 1rpx solid #ddd;
     }
   }
 }
