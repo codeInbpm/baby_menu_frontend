@@ -609,9 +609,32 @@ function onLogout() {
 }
 .grid-item.album {
   background-color: #ffe6f0;
+  animation: breathePink 4s infinite alternate;
+  &::before {
+    content: '📸'; position: absolute; font-size: 140rpx; opacity: 0.1; right: -20rpx; bottom: -30rpx;
+    animation: floatIcon 6s infinite ease-in-out alternate;
+  }
+}
+@keyframes breathePink {
+  0% { background-color: #ffe6f0; }
+  100% { background-color: #ffc2d6; }
 }
 .grid-item.memorial {
   background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+  background-size: 200% 200%;
+  animation: panMemorial 5s ease-in-out infinite alternate;
+  &::before {
+    content: '🗓️'; position: absolute; font-size: 140rpx; opacity: 0.1; left: -20rpx; top: -30rpx;
+    animation: floatIcon 7s infinite ease-in-out alternate-reverse;
+  }
+}
+@keyframes panMemorial {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+@keyframes floatIcon {
+  0% { transform: translateY(0) rotate(-10deg); }
+  100% { transform: translateY(-15rpx) rotate(10deg); }
 }
 .grid-item .overlay {
   position: absolute; inset: 0; background: rgba(0,0,0,0.15); z-index: 1;

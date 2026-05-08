@@ -1,11 +1,17 @@
 <template>
   <view class="title-entry" @click="goTitle">
     <image class="bg-pattern" src="/static/bg-pattern.png" mode="aspectFill" />
+    <view class="card-bg">
+      <view class="light-beam"></view>
+    </view>
     <view class="content">
       <view class="left">
-        <view class="title">情侣称号 <wd-icon name="medal" size="18px" color="#FFF" /></view>
-        <view class="desc" v-if="currentTitle">当前佩戴：<text class="name">{{ currentTitle.titleName }}</text></view>
-        <view class="desc" v-else>快去解锁你们的浪漫称号吧</view>
+        <text class="icon">👑</text>
+        <view class="text-info">
+          <view class="title">情侣称号</view>
+          <view class="desc" v-if="currentTitle">当前佩戴：<text class="name">{{ currentTitle.titleName }}</text></view>
+          <view class="desc" v-else>快去解锁你们的浪漫称号吧</view>
+        </view>
       </view>
       <view class="right">
         <view class="btn">查看 <wd-icon name="arrow-right" size="14px" /></view>
@@ -41,6 +47,26 @@ function goTitle() {
     width: 100%; height: 100%;
     opacity: 0.1;
   }
+
+  .card-bg {
+    position: absolute; inset: 0; z-index: 0;
+    
+    .light-beam {
+      position: absolute;
+      width: 100rpx;
+      height: 300%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      top: -100%;
+      left: -50%;
+      transform: rotate(30deg);
+      animation: sweepBeam 4s infinite linear;
+    }
+  }
+  
+  @keyframes sweepBeam {
+    0% { left: -50%; }
+    50%, 100% { left: 150%; }
+  }
   
   .content {
     position: relative;
@@ -52,22 +78,36 @@ function goTitle() {
   }
   
   .left {
-    .title {
-      font-size: 32rpx;
-      font-weight: bold;
-      color: #FFF;
-      display: flex;
-      align-items: center;
-      gap: 8rpx;
-      margin-bottom: 8rpx;
+    display: flex;
+    align-items: center;
+    
+    .icon {
+      font-size: 56rpx;
+      margin-right: 20rpx;
+      filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.1));
     }
-    .desc {
-      font-size: 24rpx;
-      color: rgba(255, 255, 255, 0.85);
-      .name {
+    
+    .text-info {
+      display: flex;
+      flex-direction: column;
+      
+      .title {
+        font-size: 32rpx;
         font-weight: bold;
-        color: #FFD700;
-        margin-left: 6rpx;
+        color: #FFF;
+        display: flex;
+        align-items: center;
+        gap: 8rpx;
+        margin-bottom: 4rpx;
+      }
+      .desc {
+        font-size: 24rpx;
+        color: rgba(255, 255, 255, 0.85);
+        .name {
+          font-weight: bold;
+          color: #FFD700;
+          margin-left: 6rpx;
+        }
       }
     }
   }
