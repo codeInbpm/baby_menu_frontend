@@ -58,6 +58,10 @@
     {
       "path": "pages/profile/PeriodCalendar",
       "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/mall/index",
+      "style": { "navigationBarTitleText": "积分商城", "navigationBarBackgroundColor": "#0f1220", "navigationBarTextStyle": "white" }
     }
   ],
   "globalStyle": {

@@ -29,9 +29,14 @@
     </view>
 
     <!-- 分配积分按钮 -->
-    <button class="btn-allocate" @click="openAllocate">
-      <text class="btn-icon">🎁</text> 拿荣誉积分给宝贝发小金库
-    </button>
+    <view class="actions-group">
+      <button class="btn-allocate" @click="openAllocate">
+        <text class="btn-icon">🎁</text> 拿荣誉积分发红包
+      </button>
+      <button class="btn-mall" @click="goMall">
+        <text class="btn-icon">🌌</text> 管家积分商城
+      </button>
+    </view>
 
     <!-- 弹窗 -->
     <view class="modal-mask" v-if="showAllocate" @click="closeAllocate">
@@ -71,6 +76,10 @@ const showAllocate = ref(false);
 function openAllocate() { showAllocate.value = true; }
 function closeAllocate() { showAllocate.value = false; }
 function noop() {}
+
+function goMall() {
+  uni.navigateTo({ url: '/pages/mall/index' });
+}
 
 const allocateForm = ref({
   amount: '',
@@ -199,24 +208,42 @@ async function confirmAllocate() {
   .highlight { font-weight: bold; font-size: 32rpx; color: #FFD700; text-shadow: 0 2rpx 8rpx rgba(255,215,0,0.4); margin: 0 8rpx; }
 }
 
-/* 分配积分按钮 */
-.btn-allocate {
-  margin-top: 30rpx;
-  background: #fff;
-  color: #FF69B4;
-  font-weight: 700;
-  font-size: 30rpx;
-  border-radius: 999rpx;
+/* 按钮组 */
+.actions-group {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24rpx 0;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.05);
-  border: 2rpx solid #FFF5F8;
-  line-height: 1;
+  gap: 20rpx;
+  margin-top: 30rpx;
+  
+  .btn-allocate, .btn-mall {
+    flex: 1;
+    font-weight: 700;
+    font-size: 28rpx;
+    border-radius: 999rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24rpx 0;
+    line-height: 1;
+    margin: 0;
+    
+    &::after { display: none; }
+    .btn-icon { margin-right: 8rpx; font-size: 32rpx; }
+  }
+  
+  .btn-allocate {
+    background: #fff;
+    color: #FF69B4;
+    box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.05);
+    border: 2rpx solid #FFF5F8;
+  }
+  
+  .btn-mall {
+    background: linear-gradient(135deg, #1a1f35 0%, #0f1220 100%);
+    color: #00E5FF;
+    box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.1);
+    border: 2rpx solid rgba(0,229,255,0.2);
+  }
 }
-.btn-allocate::after { display: none; }
-.btn-icon { margin-right: 12rpx; font-size: 36rpx; }
 
 /* 弹窗样式 */
 .modal-mask {
