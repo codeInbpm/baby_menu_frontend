@@ -119,6 +119,12 @@ export const avatarFrameApi = {
   equip: (code: string) => request({ url: '/avatar-frame/equip', method: 'POST', data: { code } }),
 };
 
+export const confessionApi = {
+  pending: () => request<any>({ url: '/confession/pending' }),
+  submit: (id: number, data: { content?: string, voiceUrl?: string }) => request({ url: `/confession/submit/${id}`, method: 'POST', data }),
+  list: () => request<any[]>({ url: '/confession/list' }),
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID

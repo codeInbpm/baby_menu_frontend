@@ -52,6 +52,10 @@
         <view v-for="item in items" :key="item.id" class="mall-card">
           <view class="icon-wrap" :class="'type-' + item.itemType">
             <ExemptionIcon v-if="item.itemType === 2" :size="60" />
+            <view v-else-if="item.itemType === 4" class="confession-icon-wrap">
+              <text class="emoji heartbeat">❤️</text>
+              <view class="bubble-icon">💬</view>
+            </view>
             <text v-else class="emoji">{{ item.icon || '🎁' }}</text>
           </view>
 
@@ -101,6 +105,27 @@
           <view class="card-footer">
             <view class="usage-info"><text class="count">可无限次切换</text></view>
             <button class="use-btn">去穿戴</button>
+          </view>
+        </view>
+
+        <!-- 我的告白记录入口 -->
+        <view class="rights-card confession-rights-card" @click="goConfessionList">
+          <view class="card-glow romance"></view>
+          <view class="card-main">
+            <view class="icon-section">
+              <text class="emoji-icon heartbeat">💌</text>
+            </view>
+            <view class="info-section">
+              <view class="name-row">
+                <text class="name romance-text">专属告白记录</text>
+              </view>
+              <text class="desc">重温公主每一次的甜蜜告白与心动语音。</text>
+              <text class="time">永久珍藏</text>
+            </view>
+          </view>
+          <view class="card-footer">
+            <view class="usage-info"><text class="count romance-text">满满的爱意</text></view>
+            <button class="use-btn romance-btn">去回味</button>
           </view>
         </view>
 
@@ -213,6 +238,10 @@ function goFrameDetail() {
   uni.navigateTo({ url: '/pages/mall/frame-detail' });
 }
 
+function goConfessionList() {
+  uni.navigateTo({ url: '/pages/confession/list' });
+}
+
 function switchTab(tab: string) {
   activeTab.value = tab;
   if (tab === 'inventory' && list.value.length === 0) {
@@ -263,7 +292,13 @@ async function handleRedeem(item: any) {
 
     toast.loading('兑换中...');
     await mallApi.redeem(item.id);
-    toast.success('兑换成功！');
+    
+    if (item.itemType === 4) {
+      toast.success('告白券已送达公主～期待她的回应！');
+    } else {
+      toast.success('兑换成功！');
+    }
+    
     loadData();
     if (activeTab.value === 'inventory' || list.value.length > 0) {
       loadInventory();
@@ -446,6 +481,24 @@ onMounted(() => {
 .highlight-name { color: #d4af37; }
 .frame-btn { background: linear-gradient(90deg, #d4af37, #f9e295); color: #000; }
 
+.confession-icon-wrap {
+  position: relative;
+  display: flex; justify-content: center; align-items: center;
+}
+.bubble-icon {
+  position: absolute; top: -10rpx; right: -10rpx; font-size: 24rpx;
+  animation: floatBubble 2s infinite ease-in-out;
+}
+.heartbeat { animation: heartbeat 1.5s infinite; display: inline-block; }
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+@keyframes floatBubble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6rpx); }
+}
+
 /* ================= 我的权益 ================= */
 .rights-list { display: flex; flex-direction: column; gap: 30rpx; }
 .rights-card {
@@ -494,6 +547,13 @@ onMounted(() => {
     }
   }
   .used-info { margin-top: 20rpx; font-size: 20rpx; color: rgba(255,255,255,0.3); }
+}
+
+.confession-rights-card {
+  border-color: rgba(255, 105, 180, 0.3);
+  .card-glow.romance { background: radial-gradient(circle, rgba(255,105,180,0.05) 0%, transparent 70%); }
+  .romance-text { color: #FF69B4; }
+  .romance-btn { background: linear-gradient(90deg, #FF69B4, #FFB6C1); color: #fff; }
 }
 
 .empty-box {

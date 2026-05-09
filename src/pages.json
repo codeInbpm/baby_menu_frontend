@@ -76,6 +76,14 @@
     {
       "path": "pages/mall/frame-detail",
       "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/confession/pending",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/confession/list",
+      "style": { "navigationStyle": "custom" }
     }
   ],
   "globalStyle": {
