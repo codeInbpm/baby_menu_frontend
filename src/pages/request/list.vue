@@ -12,6 +12,14 @@
       </view>
     </view>
 
+    <!-- 管家差评预警提示 -->
+    <view v-if="!isPet && lowScoreCount > 0 && !hideWarningBanner" class="butler-warning-banner" @click="goPendingExemption">
+      <text class="warn-icon">🛡️</text>
+      <text class="warn-text">检测到有 {{ lowScoreCount }} 项服务评价偏低，建议使用「免责金牌」保护</text>
+      <text class="warn-arrow">></text>
+      <view class="warn-close" @click.stop="hideWarningBanner = true">✕</view>
+    </view>
+
     <view class="list">
       <view v-for="r in list" :key="r.id" class="card" @click="goDetail(r)">
         <view class="top">
@@ -40,6 +48,7 @@ import { useUserStore } from '@/store/user';
 
 const user = useUserStore();
 const selfId = computed(() => user.info?.id);
+const isPet = computed(() => user.info?.roleInCouple === 'pet');
 
 const tabs = [
   { label: '全部', value: undefined as number | undefined },
@@ -54,7 +63,34 @@ function statusText(s: number) {
   return ['待处理', '已接受', '已完成', '已拒绝'][s] || '';
 }
 function onTab(v: number | undefined) { tab.value = v; load(); }
-async function load() { list.value = await requestApi.list(tab.value); }
+
+const lowScoreCount = ref(0);
+const hideWarningBanner = ref(false);
+
+async function checkExemptionOpportunity() {
+  try {
+    const res = await requestApi.list(2); // 已完成
+    const lowList = res.filter((r: any) => {
+      const hasLowScore = r.score !== null && r.score !== undefined && r.score > 0 && r.score < 3;
+      const notExempted = !r.isExemptionUsed;
+      return hasLowScore && notExempted;
+    });
+    lowScoreCount.value = lowList.length;
+  } catch (e) {
+    console.error('[免责预警] 检测失败:', e);
+  }
+}
+
+function goPendingExemption() {
+  uni.navigateTo({ url: '/pages/mall/index' });
+}
+
+async function load() { 
+  list.value = await requestApi.list(tab.value); 
+  if (!isPet.value) {
+    checkExemptionOpportunity();
+  }
+}
 function goDetail(r: any) { uni.navigateTo({ url: `/pages/request/detail?id=${r.id}` }); }
 
 onShow(load);
@@ -79,4 +115,22 @@ onShow(load);
 .stars { color: #FFD700; letter-spacing: 2rpx; font-size: 20rpx; }
 .exemption-tag { font-size: 18rpx; color: #d4af37; background: rgba(212, 175, 55, 0.1); padding: 2rpx 10rpx; border-radius: 8rpx; border: 1rpx solid rgba(212, 175, 55, 0.3); }
 .empty { text-align: center; padding: 100rpx 0; color: #B8A8B0; }
+
+.butler-warning-banner {
+  background: linear-gradient(90deg, #1e2439, #2c2c2c);
+  color: #d4af37;
+  padding: 20rpx 28rpx;
+  margin-bottom: 24rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  border: 1rpx solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.2);
+  
+  .warn-icon { font-size: 32rpx; margin-right: 16rpx; }
+  .warn-text { flex: 1; font-weight: bold; }
+  .warn-arrow { opacity: 0.5; margin-left: 10rpx; }
+  .warn-close { opacity: 0.6; margin-left: 20rpx; font-size: 28rpx; padding: 10rpx; }
+}
 </style>
