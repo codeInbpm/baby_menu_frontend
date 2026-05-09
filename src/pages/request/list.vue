@@ -19,7 +19,11 @@
           <text class="status" :class="`s-${r.status}`">{{ statusText(r.status) }}</text>
         </view>
         <view class="meta">
-          <text>{{ r.fromUserId === selfId ? '我发起的' : '对方发起' }}</text>
+          <view class="meta-left">
+            <text>{{ r.fromUserId === selfId ? '我发起的' : '对方发起' }}</text>
+            <text v-if="r.score && r.score > 0" class="stars">{{ '⭐'.repeat(r.score) }}</text>
+            <text v-if="r.isExemptionUsed" class="exemption-tag">已免责</text>
+          </view>
           <text class="time">{{ r.createTime }}</text>
         </view>
       </view>
@@ -70,6 +74,9 @@ onShow(load);
 .s-1 { background: #E0F1FF; color: #4080F0; }
 .s-2 { background: #ECF8EE; color: #1FCB6A; }
 .s-3 { background: #FBE6E6; color: #ff5b5b; }
-.meta { display: flex; justify-content: space-between; margin-top: 14rpx; font-size: 22rpx; color: #999; }
+.meta { display: flex; justify-content: space-between; align-items: center; margin-top: 14rpx; font-size: 22rpx; color: #999; }
+.meta-left { display: flex; align-items: center; gap: 12rpx; }
+.stars { color: #FFD700; letter-spacing: 2rpx; font-size: 20rpx; }
+.exemption-tag { font-size: 18rpx; color: #d4af37; background: rgba(212, 175, 55, 0.1); padding: 2rpx 10rpx; border-radius: 8rpx; border: 1rpx solid rgba(212, 175, 55, 0.3); }
 .empty { text-align: center; padding: 100rpx 0; color: #B8A8B0; }
 </style>

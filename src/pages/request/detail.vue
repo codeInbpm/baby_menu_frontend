@@ -33,8 +33,8 @@
         <button v-if="data.status === 0" class="btn primary" @click="op('accept')">接受 ❤️</button>
         <button v-if="data.status === 0" class="btn ghost" @click="op('reject')">拒绝</button>
         <button v-if="data.status === 1" class="btn primary" @click="op('finish')">完成服务</button>
-        <!-- 只有进行中且未免责时显示 -->
-        <button v-if="data.status === 1 && !data.isExemptionUsed" class="btn gold-btn" @click="goUseExemption">使用免责金牌</button>
+        <!-- 任务已完成、被打低分且未免责时显示 -->
+        <button v-if="data.status === 2 && data.score > 0 && data.score < 3 && !data.isExemptionUsed" class="btn gold-btn" @click="checkAndShowExemptionTip(true)">使用免责金牌</button>
       </block>
 
       <!-- 发起方操作 -->
@@ -115,7 +115,7 @@ async function load() {
   data.value = await requestApi.detail(id.value); 
   // 强化触发条件：管家身份 + 已完成 + 评分 < 3 + 未免责
   if (isReceiver.value && data.value.status === 2 && data.value.score > 0 && data.value.score < 3 && !data.value.isExemptionUsed) {
-    checkAndShowExemptionTip();
+    checkAndShowExemptionTip(false);
   }
 }
 
@@ -123,7 +123,7 @@ const showExemptionTip = ref(false);
 const remainingExemptions = ref(0);
 const exemptionItemId = ref<number | null>(null);
 
-async function checkAndShowExemptionTip() {
+async function checkAndShowExemptionTip(manual = false) {
   try {
     const inventory = await mallApi.inventory();
     const medal = inventory.find((it: any) => it.itemType === 2 && it.status === 0);
@@ -131,8 +131,12 @@ async function checkAndShowExemptionTip() {
       exemptionItemId.value = medal.id;
       remainingExemptions.value = 1;
       showExemptionTip.value = true;
+    } else if (manual) {
+      uni.showToast({ title: '您暂无免责金牌，请前往商城兑换', icon: 'none' });
     }
-  } catch (e) {}
+  } catch (e) {
+    if (manual) uni.showToast({ title: '获取特权失败', icon: 'none' });
+  }
 }
 
 async function applyExemption() {
@@ -178,9 +182,7 @@ async function submitEvaluate() {
   }
 }
 
-function goUseExemption() {
-  uni.navigateTo({ url: '/pages/mall/inventory' });
-}
+
 </script>
 
 <style lang="scss" scoped>

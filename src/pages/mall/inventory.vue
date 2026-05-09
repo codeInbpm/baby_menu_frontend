@@ -1,5 +1,10 @@
 <template>
   <view class="inventory-page">
+    <view class="nav-bar">
+      <view class="back-btn" @click="goBack">
+        <wd-icon name="arrow-left" size="24px" color="#d4af37" />
+      </view>
+    </view>
     <view class="header">
       <view class="title">我的特权</view>
       <view class="subtitle">管家的专属荣誉与护身符</view>
@@ -99,12 +104,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { mallApi, requestApi } from '@/api';
-import { useToast, useMessageBox } from 'wot-design-uni';
+import { useToast, useMessage } from 'wot-design-uni';
 import ExemptionIcon from '@/components/ExemptionIcon/ExemptionIcon.vue';
 import dayjs from 'dayjs';
 
 const toast = useToast();
-const messageBox = useMessageBox();
+const messageBox = useMessage();
 const list = ref<any[]>([]);
 const loading = ref(true);
 const showUsePicker = ref(false);
@@ -114,7 +119,7 @@ const selectedInventoryId = ref<number | null>(null);
 async function loadData() {
   loading.value = true;
   try {
-    const res = await mallApi.getInventory();
+    const res = await mallApi.inventory();
     list.value = res;
   } catch (e) {
     toast.error('加载失败');
@@ -140,6 +145,10 @@ function getItemDesc(item: any) {
 
 function goMall() {
   uni.navigateTo({ url: '/pages/mall/index' });
+}
+
+function goBack() {
+  uni.navigateBack();
 }
 
 async function onUse(item: any) {
@@ -200,7 +209,17 @@ onMounted(loadData);
   min-height: 100vh;
   background: #0f1220;
   color: #fff;
-  padding: 40rpx 30rpx;
+  padding: 0 30rpx 40rpx;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 0 20rpx;
+  position: sticky;
+  top: 0;
+  background: #0f1220;
+  z-index: 10;
 }
 
 .header {

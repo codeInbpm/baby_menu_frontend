@@ -70,10 +70,6 @@
       }
     },
     {
-      "path": "pages/mall/index",
-      "style": { "navigationStyle": "custom" }
-    },
-    {
       "path": "pages/mall/inventory",
       "style": { "navigationStyle": "custom" }
     }
