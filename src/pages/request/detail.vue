@@ -20,6 +20,11 @@
           <text class="feedback">{{ data.petFeedback }}</text>
         </view>
       </view>
+      <!-- 免责保护状态 -->
+      <view class="exemption-status" v-if="data.isExemptionUsed">
+        <wd-icon name="check-circle" color="#d4af37" size="16px" />
+        <text>本次服务受「免责金牌」保护中</text>
+      </view>
     </view>
 
     <view class="actions" v-if="data">
@@ -28,6 +33,8 @@
         <button v-if="data.status === 0" class="btn primary" @click="op('accept')">接受 ❤️</button>
         <button v-if="data.status === 0" class="btn ghost" @click="op('reject')">拒绝</button>
         <button v-if="data.status === 1" class="btn primary" @click="op('finish')">完成服务</button>
+        <!-- 只有进行中且未免责时显示 -->
+        <button v-if="data.status === 1 && !data.isExemptionUsed" class="btn gold-btn" @click="goUseExemption">使用免责金牌</button>
       </block>
 
       <!-- 发起方操作 -->
@@ -62,6 +69,20 @@
         </view>
       </view>
     </wd-popup>
+
+    <!-- 低分免责保护提示 -->
+    <wd-popup v-model="showExemptionTip" position="center" custom-class="protection-popup">
+      <view class="p-content">
+        <view class="p-icon">🛡️</view>
+        <view class="p-title">检测到低分评价预警</view>
+        <view class="p-desc">公主本次评价偏低（{{ data?.score }}星），是否使用「服务免责金牌」进行保护？</view>
+        <view class="p-tip">使用后将退回罚分，且不影响称号进度。(本月剩余{{ remainingExemptions }}次)</view>
+        <view class="p-footer">
+          <button class="p-btn ghost" @click="showExemptionTip = false">暂不使用</button>
+          <button class="p-btn gold" @click="applyExemption">立即保护</button>
+        </view>
+      </view>
+    </wd-popup>
   </view>
 </template>
 
@@ -90,7 +111,44 @@ onLoad((opts: any) => {
   load();
 });
 
-async function load() { data.value = await requestApi.detail(id.value); }
+async function load() { 
+  data.value = await requestApi.detail(id.value); 
+  // 强化触发条件：管家身份 + 已完成 + 评分 < 3 + 未免责
+  if (isReceiver.value && data.value.status === 2 && data.value.score > 0 && data.value.score < 3 && !data.value.isExemptionUsed) {
+    checkAndShowExemptionTip();
+  }
+}
+
+const showExemptionTip = ref(false);
+const remainingExemptions = ref(0);
+const exemptionItemId = ref<number | null>(null);
+
+async function checkAndShowExemptionTip() {
+  try {
+    const inventory = await mallApi.inventory();
+    const medal = inventory.find((it: any) => it.itemType === 2 && it.status === 0);
+    if (medal) {
+      exemptionItemId.value = medal.id;
+      remainingExemptions.value = 1;
+      showExemptionTip.value = true;
+    }
+  } catch (e) {}
+}
+
+async function applyExemption() {
+  if (!exemptionItemId.value) return;
+  uni.showLoading({ title: '激活保护中...' });
+  try {
+    await mallApi.useItem(exemptionItemId.value, { requestId: id.value });
+    uni.hideLoading();
+    showExemptionTip.value = false;
+    uni.showToast({ title: '免责保护已激活！', icon: 'success' });
+    load();
+  } catch (e: any) {
+    uni.hideLoading();
+    uni.showToast({ title: e.message || '激活失败', icon: 'none' });
+  }
+}
 async function op(action: 'accept' | 'reject' | 'finish') {
   await (requestApi as any)[action](id.value);
   uni.showToast({ title: '已处理', icon: 'success' });
@@ -119,17 +177,47 @@ async function submitEvaluate() {
     uni.showToast({ title: e.message || '评价失败', icon: 'none' });
   }
 }
+
+function goUseExemption() {
+  uni.navigateTo({ url: '/pages/mall/inventory' });
+}
 </script>
 
 <style lang="scss" scoped>
-.page { padding: 32rpx; }
-.card { background: #fff; border-radius: 24rpx; padding: 32rpx; }
+.page { padding: 32rpx; min-height: 100vh; background: #f7f7f7; }
+.card { background: #fff; border-radius: 24rpx; padding: 32rpx; position: relative; }
 .title { font-size: 34rpx; font-weight: 700; color: #FF6FA0; margin-bottom: 16rpx; }
 .meta { font-size: 26rpx; color: #888; margin-top: 8rpx; }
-.actions { display: flex; gap: 20rpx; margin-top: 32rpx; }
-.btn { flex: 1; padding: 22rpx 0; border-radius: 999rpx; font-size: 28rpx; }
+.actions { display: flex; flex-direction: column; gap: 20rpx; margin-top: 32rpx; }
+.btn { width: 100%; padding: 22rpx 0; border-radius: 999rpx; font-size: 28rpx; text-align: center; }
 .btn.primary { background: linear-gradient(135deg, #FF8FB3, #FF6FA0); color: #fff; }
 .btn.ghost { background: #f4f4f4; color: #666; }
+.btn.gold-btn { 
+  background: linear-gradient(135deg, #d4af37, #f9e295); 
+  color: #1a1a1a; font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(212, 175, 55, 0.3);
+}
+
+.exemption-status {
+  margin-top: 24rpx; padding: 16rpx 24rpx; background: rgba(212, 175, 55, 0.08);
+  border-radius: 12rpx; display: flex; align-items: center; gap: 12rpx;
+  font-size: 24rpx; color: #b8860b; font-weight: 500;
+}
+
+.protection-popup {
+  width: 600rpx; border-radius: 32rpx; overflow: hidden;
+}
+.p-content {
+  padding: 60rpx 40rpx; text-align: center; background: #1e2439; color: #fff;
+  .p-icon { font-size: 100rpx; margin-bottom: 30rpx; }
+  .p-title { font-size: 36rpx; font-weight: bold; color: #d4af37; margin-bottom: 20rpx; }
+  .p-desc { font-size: 28rpx; color: #eee; line-height: 1.5; margin-bottom: 20rpx; }
+  .p-tip { font-size: 22rpx; color: rgba(255,255,255,0.4); margin-bottom: 40rpx; }
+  .p-footer { display: flex; gap: 20rpx; }
+  .p-btn { flex: 1; height: 80rpx; line-height: 80rpx; font-size: 26rpx; border-radius: 40rpx; margin: 0; }
+  .p-btn.ghost { background: rgba(255,255,255,0.05); color: #888; }
+  .p-btn.gold { background: linear-gradient(90deg, #d4af37, #f9e295); color: #0f1220; font-weight: bold; }
+}
 
 .eval-box {
   margin-top: 30rpx; padding-top: 20rpx; border-top: 2rpx dashed #eee;

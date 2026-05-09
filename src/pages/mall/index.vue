@@ -1,414 +1,272 @@
 <template>
-  <view class="mall-page" :class="user.themeClass">
-    <view class="header">
-      <view class="points-info">
-        <text class="label">我的可用积分</text>
-        <view class="points">
-          <wd-icon name="star-on" size="24px" color="#FFD700" class="star-icon" />
-          <text class="num">{{ user.info?.points || 0 }}</text>
+  <view class="mall-page">
+    <view class="nav-bar">
+      <view class="back-btn" @click="goBack">
+        <wd-icon name="arrow-left" size="24px" />
+      </view>
+      <view class="points-badge">
+        <text class="label">我的积分</text>
+        <text class="value">{{ points }}</text>
+      </view>
+      <view class="my-rights-btn" @click="goInventory">
+        <wd-icon name="app" size="20px" />
+        <text>我的特权</text>
+      </view>
+    </view>
+
+    <view class="hero-section">
+      <view class="title">管家积分商城</view>
+      <view class="subtitle">兑换你的专属特权与护身符</view>
+    </view>
+
+    <view class="item-grid">
+      <view 
+        v-for="item in items" 
+        :key="item.id" 
+        class="mall-item-card"
+        @click="showDetail(item)"
+      >
+        <view class="item-icon-wrap" :class="'type-' + item.itemType">
+          <ExemptionIcon v-if="item.itemType === 2" :size="80" />
+          <text v-else class="emoji">{{ item.icon || '🎁' }}</text>
+        </view>
+        <view class="item-info">
+          <text class="item-name">{{ item.name }}</text>
+          <view class="price-row">
+            <text class="price">{{ item.price }}</text>
+            <text class="unit">积分</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- Tabs -->
-    <view class="tabs">
-      <view class="tab" :class="{ active: currentTab === 0 }" @click="currentTab = 0">兑换商城</view>
-      <view class="tab" :class="{ active: currentTab === 1 }" @click="currentTab = 1">我的权益</view>
-      <view class="tab-indicator" :style="{ left: currentTab === 0 ? '25%' : '75%' }"></view>
-    </view>
-
-    <!-- 商城列表 -->
-    <scroll-view scroll-y class="list-container" v-if="currentTab === 0">
-      <view class="empty" v-if="items.length === 0">暂无商品上架</view>
-      <view class="mall-item" v-for="item in items" :key="item.id">
-        <view class="icon-wrap">{{ item.icon || '🎁' }}</view>
-        <view class="info">
-          <view class="name">{{ item.name }}</view>
-          <view class="desc">{{ item.description }}</view>
-          <view class="meta">
-            <text class="price">{{ item.price }} 积分</text>
-            <text class="validity" v-if="item.validityDays">有效期 {{ item.validityDays }} 天</text>
-            <text class="validity" v-else>永久有效</text>
-          </view>
+    <!-- 详情弹窗 -->
+    <wd-popup v-model="showPopup" position="center" custom-class="detail-popup">
+      <view class="detail-content" v-if="selectedItem">
+        <view class="detail-icon">
+          <ExemptionIcon v-if="selectedItem.itemType === 2" :size="120" />
+          <text v-else class="emoji-large">{{ selectedItem.icon }}</text>
         </view>
-        <view class="action">
+        <view class="detail-name">{{ selectedItem.name }}</view>
+        <view class="detail-desc">{{ selectedItem.description }}</view>
+        
+        <view class="detail-limit" v-if="selectedItem.itemType === 2">
+          <wd-icon name="info-circle" size="14px" />
+          <text>每个自然月限兑换1次</text>
+        </view>
+
+        <view class="detail-footer">
+          <view class="cost">
+            <text class="val">{{ selectedItem.price }}</text>
+            <text class="lab">积分</text>
+          </view>
           <button 
-            class="btn-redeem" 
-            :class="{ disabled: (user.info?.points || 0) < item.price }"
-            @click="handleRedeem(item)">
-            兑换
+            class="redeem-btn" 
+            :disabled="points < selectedItem.price"
+            @click="handleRedeem"
+          >
+            {{ points < selectedItem.price ? '积分不足' : '立即兑换' }}
           </button>
         </view>
       </view>
-      <view class="spacer"></view>
-    </scroll-view>
+    </wd-popup>
 
-    <!-- 我的权益列表 -->
-    <scroll-view scroll-y class="list-container" v-if="currentTab === 1">
-      <view class="empty" v-if="inventory.length === 0">暂无已兑换的权益</view>
-      <view class="mall-item inv-item" v-for="inv in inventory" :key="inv.id">
-        <view class="icon-wrap" :class="{ used: inv.status === 1 }">{{ getIconByType(inv.itemType) }}</view>
-        <view class="info">
-          <view class="name" :class="{ used: inv.status === 1 }">{{ inv.itemName }}</view>
-          <view class="desc" v-if="inv.status === 1">已于 {{ formatDate(inv.useTime) }} 使用</view>
-          <view class="desc" v-else-if="inv.expireTime">过期时间: {{ formatDate(inv.expireTime) }}</view>
-          <view class="desc" v-else>永久有效</view>
-        </view>
-        <view class="action">
-          <view class="status-tag used" v-if="inv.status === 1 && inv.itemType !== 1">已使用</view>
-          <template v-else-if="inv.itemType === 1 && inv.status === 1">
-             <view class="remind-group">
-               <text class="remind-status">已提醒</text>
-               <button class="btn-remind" @click="handleRemind(inv)">再次提醒</button>
-             </view>
-          </template>
-          <button v-else class="btn-use" @click="handleUse(inv)">立即使用</button>
-        </view>
-      </view>
-      <view class="spacer"></view>
-    </scroll-view>
+    <wd-toast id="wd-toast" />
+    <wd-message-box id="wd-message-box" />
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useUserStore } from '@/store/user';
-import { mallApi, userApi } from '@/api';
-import { requestSubscribe } from '@/utils/subscribe';
-import { useSubscribeGuide } from '@/utils/subscribeGuide';
+import { mallApi, userApi, pointsApi } from '@/api';
+import { useToast, useMessageBox } from 'wot-design-uni';
+import ExemptionIcon from '@/components/ExemptionIcon/ExemptionIcon.vue';
 
-const user = useUserStore();
-const currentTab = ref(0);
+const toast = useToast();
+const messageBox = useMessageBox();
 const items = ref<any[]>([]);
-const inventory = ref<any[]>([]);
-
-onMounted(() => {
-  loadData();
-});
+const points = ref(0);
+const showPopup = ref(false);
+const selectedItem = ref<any>(null);
 
 async function loadData() {
-  uni.showLoading({ title: '加载中' });
   try {
-    const [me, itemsRes, invRes] = await Promise.all([
-      userApi.me(),
+    const [itemList, pointInfo] = await Promise.all([
       mallApi.items(),
-      mallApi.inventory()
+      pointsApi.info()
     ]);
-    user.setLogin(user.token, me.user, me.bound);
-    items.value = itemsRes || [];
-    inventory.value = invRes || [];
+    items.value = itemList;
+    points.value = pointInfo.points;
   } catch (e) {
-    uni.showToast({ title: '加载失败', icon: 'none' });
-  } finally {
-    uni.hideLoading();
+    toast.error('加载失败');
   }
+}
+
+function showDetail(item: any) {
+  selectedItem.value = item;
+  showPopup.value = true;
+}
+
+async function handleRedeem() {
+  if (!selectedItem.value) return;
   
-  const { checkAndPrompt } = useSubscribeGuide('mall');
-  checkAndPrompt();
-}
+  try {
+    await messageBox.confirm({
+      title: '确认兑换',
+      content: `确定消耗 ${selectedItem.value.price} 积分兑换「${selectedItem.value.name}」吗？`,
+      confirmButtonText: '立即兑换'
+    });
 
-function handleRedeem(item: any) {
-  if ((user.info?.points || 0) < item.price) {
-    uni.showToast({ title: '积分不足，快去完成服务赚取吧', icon: 'none' });
-    return;
+    toast.loading('兑换中...');
+    await mallApi.redeem(selectedItem.value.id);
+    toast.success('兑换成功！');
+    showPopup.value = false;
+    loadData();
+  } catch (e: any) {
+    if (e !== 'cancel') toast.error(e.message || '兑换失败');
   }
-  uni.showModal({
-    title: '确认兑换',
-    content: `确定要花费 ${item.price} 积分兑换【${item.name}】吗？`,
-    success: async (res) => {
-      if (res.confirm) {
-        uni.showLoading({ title: '兑换中' });
-        try {
-          await mallApi.redeem(item.id);
-          uni.showToast({ title: '兑换成功！', icon: 'success' });
-          loadData();
-        } catch (e: any) {
-          uni.showToast({ title: e.message || '兑换失败', icon: 'none' });
-        }
-      }
-    }
-  });
 }
 
-function handleUse(inv: any) {
-  uni.showModal({
-    title: '确认激活',
-    content: inv.itemType === 1 ? '确认立即激活【公主主动服务卡】吗？激活后系统会马上发送高优先级提醒给公主！' : `确定要使用【${inv.itemName}】吗？`,
-    success: async (res) => {
-      if (res.confirm) {
-        uni.showLoading({ title: '处理中' });
-        try {
-          await mallApi.useItem(inv.id);
-          uni.showToast({ title: '已成功激活并提醒！', icon: 'success' });
-          loadData();
-        } catch (e: any) {
-          uni.showToast({ title: e.message || '操作失败', icon: 'none' });
-        }
-      }
-    }
-  });
+function goInventory() {
+  uni.navigateTo({ url: '/pages/mall/inventory' });
 }
 
-function handleRemind(inv: any) {
-  uni.showModal({
-    title: '再次提醒公主',
-    content: '公主可能在忙没有看到哦，确定要再发送一次强力提醒吗？（每张卡最多可再提醒2次）',
-    success: async (res) => {
-      if (res.confirm) {
-        uni.showLoading({ title: '发送中' });
-        try {
-          await mallApi.remind(inv.id);
-          uni.showToast({ title: '提醒已再次发送！', icon: 'success' });
-          loadData();
-        } catch (e: any) {
-          uni.showToast({ title: e.message || '发送失败', icon: 'none' });
-        }
-      }
-    }
-  });
+function goBack() {
+  uni.navigateBack();
 }
 
-function getIconByType(type: number) {
-  const map: Record<number, string> = {
-    1: '💖', 2: '🏅', 3: '🖼️', 4: '💌', 5: '🎨'
-  };
-  return map[type] || '🎁';
-}
-
-function formatDate(ds: string) {
-  if (!ds) return '';
-  const d = new Date(ds);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
+onMounted(loadData);
 </script>
 
 <style lang="scss" scoped>
 .mall-page {
   min-height: 100vh;
-  background-color: #0f1220; /* Deep tech background */
+  background: #0f1220;
   color: #fff;
-  display: flex;
-  flex-direction: column;
+  padding: 0 30rpx 60rpx;
 }
 
-.header {
-  padding: 60rpx 40rpx 40rpx;
-  background: linear-gradient(135deg, #1a1f35 0%, #0f1220 100%);
-  border-bottom: 1rpx solid rgba(255,255,255,0.05);
-  
-  .points-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    
-    .label {
-      font-size: 26rpx;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 12rpx;
-    }
-    
-    .points {
-      display: flex;
-      align-items: center;
-      gap: 12rpx;
-      
-      .num {
-        font-size: 72rpx;
-        font-weight: bold;
-        background: linear-gradient(to right, #FFD700, #FDB931);
-        -webkit-background-clip: text;
-        color: transparent;
-      }
-      .star-icon {
-        margin-top: -10rpx;
-      }
-    }
-  }
-}
-
-.tabs {
-  display: flex;
-  position: relative;
-  height: 90rpx;
-  background-color: rgba(26, 31, 53, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 10;
-  
-  .tab {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 30rpx;
-    color: rgba(255,255,255,0.5);
-    transition: all 0.3s;
-    font-weight: 500;
-    
-    &.active {
-      color: #00E5FF; /* Cyberpunk cyan */
-    }
-  }
-  
-  .tab-indicator {
-    position: absolute;
-    bottom: 0;
-    width: 60rpx;
-    height: 6rpx;
-    background: linear-gradient(90deg, #00E5FF, #0088FF);
-    border-radius: 6rpx;
-    transform: translateX(-50%);
-    transition: all 0.3s ease;
-  }
-}
-
-.list-container {
-  flex: 1;
-  padding: 30rpx;
-  box-sizing: border-box;
-}
-
-.empty {
-  text-align: center;
-  color: rgba(255,255,255,0.3);
-  margin-top: 100rpx;
-  font-size: 28rpx;
-}
-
-.mall-item {
+.nav-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 40rpx 0;
+  position: sticky;
+  top: 0;
+  background: #0f1220;
+  z-index: 10;
+}
+
+.points-badge {
+  background: rgba(255,255,255,0.05);
+  padding: 10rpx 30rpx;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  .label { font-size: 22rpx; color: rgba(255,255,255,0.5); }
+  .value { font-size: 32rpx; font-weight: bold; color: #d4af37; }
+}
+
+.my-rights-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.8);
+}
+
+.hero-section {
+  padding: 40rpx 0 60rpx;
+  .title { font-size: 48rpx; font-weight: 900; color: #fff; text-shadow: 0 0 20rpx rgba(212,175,55,0.2); }
+  .subtitle { font-size: 24rpx; color: rgba(255,255,255,0.5); margin-top: 10rpx; }
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30rpx;
+}
+
+.mall-item-card {
   background: rgba(255,255,255,0.03);
-  border: 1rpx solid rgba(255,255,255,0.06);
+  border: 1rpx solid rgba(255,255,255,0.05);
   border-radius: 24rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.2);
+  padding: 40rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s;
   
-  .icon-wrap {
-    width: 100rpx;
-    height: 100rpx;
-    border-radius: 20rpx;
-    background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(0,136,255,0.1));
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 50rpx;
-    margin-right: 24rpx;
-    border: 1px solid rgba(0,229,255,0.2);
+  &:active { background: rgba(255,255,255,0.08); transform: scale(0.98); }
+  
+  .item-icon-wrap {
+    width: 140rpx; height: 140rpx;
+    background: rgba(255,255,255,0.02);
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    margin-bottom: 24rpx;
+    box-shadow: inset 0 0 20rpx rgba(0,0,0,0.2);
     
-    &.used {
-      filter: grayscale(1);
-      opacity: 0.5;
-    }
+    &.type-2 { border: 2rpx solid rgba(212, 175, 55, 0.2); }
   }
   
-  .info {
-    flex: 1;
-    
-    .name {
-      font-size: 32rpx;
-      font-weight: bold;
-      color: #fff;
-      margin-bottom: 8rpx;
-      &.used {
-        color: rgba(255,255,255,0.5);
-      }
-    }
-    
-    .desc {
-      font-size: 24rpx;
-      color: rgba(255,255,255,0.5);
-      line-height: 1.4;
-      margin-bottom: 16rpx;
-    }
-    
-    .meta {
-      display: flex;
-      align-items: center;
-      gap: 16rpx;
-      
-      .price {
-        font-size: 26rpx;
-        color: #FFD700;
-        font-weight: bold;
-      }
-      
-      .validity {
-        font-size: 22rpx;
-        color: rgba(0,229,255,0.7);
-        background: rgba(0,229,255,0.1);
-        padding: 4rpx 12rpx;
-        border-radius: 8rpx;
-      }
-    }
-  }
+  .emoji { font-size: 80rpx; }
   
-  .action {
-    margin-left: 20rpx;
-    
-    .btn-redeem {
-      background: linear-gradient(135deg, #00E5FF 0%, #0088FF 100%);
-      color: #fff;
-      font-size: 26rpx;
-      padding: 0 36rpx;
-      height: 64rpx;
-      line-height: 64rpx;
-      border-radius: 32rpx;
-      font-weight: bold;
-      
-      &.disabled {
-        background: rgba(255,255,255,0.1);
-        color: rgba(255,255,255,0.3);
-      }
-    }
-    
-    .btn-use {
-      background: linear-gradient(135deg, #FF69B4 0%, #9C27B0 100%);
-      color: #fff;
-      font-size: 26rpx;
-      padding: 0 36rpx;
-      height: 64rpx;
-      line-height: 64rpx;
-      border-radius: 32rpx;
-      font-weight: bold;
-    }
-    
-    .remind-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10rpx;
-      
-      .remind-status {
-        font-size: 22rpx;
-        color: #00E5FF;
-      }
-      
-      .btn-remind {
-        background: rgba(0,229,255,0.1);
-        color: #00E5FF;
-        border: 1px solid rgba(0,229,255,0.3);
-        font-size: 24rpx;
-        padding: 0 24rpx;
-        height: 50rpx;
-        line-height: 48rpx;
-        border-radius: 25rpx;
-        &::after { display: none; }
-      }
-    }
-    
-    .status-tag {
-      font-size: 24rpx;
-      color: rgba(255,255,255,0.4);
-      background: rgba(255,255,255,0.05);
-      padding: 8rpx 20rpx;
-      border-radius: 32rpx;
+  .item-info {
+    text-align: center;
+    .item-name { font-size: 28rpx; color: #eee; font-weight: 600; display: block; margin-bottom: 12rpx; }
+    .price-row {
+      display: flex; align-items: baseline; justify-content: center; gap: 4rpx;
+      .price { font-size: 36rpx; font-weight: bold; color: #d4af37; }
+      .unit { font-size: 20rpx; color: rgba(255,255,255,0.4); }
     }
   }
 }
 
-.spacer {
-  height: 60rpx;
+.detail-popup {
+  width: 600rpx;
+  border-radius: 32rpx;
+  overflow: hidden;
+  background: #1e2439;
+}
+
+.detail-content {
+  padding: 60rpx 40rpx;
+  text-align: center;
+  background: #1e2439;
+  
+  .detail-icon { margin-bottom: 40rpx; }
+  .emoji-large { font-size: 120rpx; }
+  .detail-name { font-size: 40rpx; font-weight: bold; color: #d4af37; margin-bottom: 24rpx; }
+  .detail-desc { font-size: 26rpx; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 40rpx; }
+  
+  .detail-limit {
+    background: rgba(212, 175, 55, 0.1);
+    color: #d4af37; font-size: 22rpx;
+    padding: 10rpx 24rpx; border-radius: 8rpx;
+    display: inline-flex; align-items: center; gap: 8rpx;
+    margin-bottom: 40rpx;
+  }
+  
+  .detail-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 40rpx; padding-top: 40rpx; border-top: 1rpx solid rgba(255,255,255,0.05);
+    
+    .cost {
+      text-align: left;
+      .val { font-size: 44rpx; font-weight: bold; color: #fff; }
+      .lab { font-size: 22rpx; color: rgba(255,255,255,0.4); margin-left: 8rpx; }
+    }
+    
+    .redeem-btn {
+      margin: 0; padding: 0 48rpx; height: 88rpx; line-height: 88rpx;
+      background: linear-gradient(90deg, #d4af37, #f9e295);
+      color: #0f1220; font-size: 30rpx; font-weight: bold;
+      border-radius: 44rpx;
+      
+      &[disabled] { background: #444; color: #888; }
+    }
+  }
 }
 </style>

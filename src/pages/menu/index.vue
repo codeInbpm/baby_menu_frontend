@@ -28,6 +28,13 @@
         💖 主动宠爱管家模式 (本次免积分)
       </view>
 
+      <!-- 管家差评预警提示 -->
+      <view v-if="!isPet && lowScoreCount > 0" class="butler-warning-banner" @click="goPendingExemption">
+        <text class="warn-icon">🛡️</text>
+        <text class="warn-text">检测到有 {{ lowScoreCount }} 项服务评价偏低，建议使用「免责金牌」保护</text>
+        <text class="warn-arrow">></text>
+      </view>
+
       <!-- 第二行：当前分类标签 + 管理菜谱 + 添加菜谱 + 搜索 -->
       <view class="cat-bar">
         <view class="cur-cat">{{ currentCategoryName }}</view>
@@ -156,16 +163,44 @@ async function loadAll() {
   // 检查绑定状态
   try {
     const me = await userApi.me();
+    // 重要：同步更新 user.info，确保 isPet 等 computed 能拿到最新角色
+    if (me.user) {
+      user.setLogin(user.token, me.user, me.bound);
+    }
     user.setPartner(me.partner);
     if (!me.bound) {
       uni.reLaunch({ url: '/pages/bind/index' });
       return;
+    }
+    // 管家端专属逻辑：用最新返回的角色判断，不依赖 store computed
+    if (me.user?.roleInCouple === 'owner') {
+      checkExemptionOpportunity();
     }
   } catch {}
   categories.value = await menuApi.categories();
   if (categories.value.length) {
     onCategory(categories.value[0]);
   }
+}
+
+const lowScoreCount = ref(0);
+async function checkExemptionOpportunity() {
+  try {
+    const res = await requestApi.list(2); // 已完成
+    const lowList = res.filter((r: any) => {
+      const hasLowScore = r.score !== null && r.score !== undefined && r.score > 0 && r.score < 3;
+      const notExempted = !r.isExemptionUsed; // null / 0 / undefined 均视为未免责
+      return hasLowScore && notExempted;
+    });
+    console.log('[免责预警] 低分未保护服务列表:', lowList);
+    lowScoreCount.value = lowList.length;
+  } catch (e) {
+    console.error('[免责预警] 检测失败:', e);
+  }
+}
+
+function goPendingExemption() {
+  uni.navigateTo({ url: '/pages/mall/inventory' });
 }
 
 async function onCategory(c: any) {
@@ -444,5 +479,22 @@ page {
   text-align: center;
   box-shadow: 0 4rpx 12rpx rgba(255, 20, 147, 0.1);
   border: 2rpx solid #FFC0CB;
+}
+
+.butler-warning-banner {
+  background: linear-gradient(90deg, #1e2439, #2c2c2c);
+  color: #d4af37;
+  padding: 20rpx 28rpx;
+  margin: 0 28rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  border: 1rpx solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.2);
+  
+  .warn-icon { font-size: 32rpx; margin-right: 16rpx; }
+  .warn-text { flex: 1; font-weight: bold; }
+  .warn-arrow { opacity: 0.5; margin-left: 10rpx; }
 }
 </style>
