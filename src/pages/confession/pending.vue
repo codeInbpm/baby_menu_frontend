@@ -125,9 +125,10 @@ onMounted(() => {
     uploadVoice(res.tempFilePath);
   });
   
-  recorderManager.onError((err) => {
+  recorderManager.onError((err: any) => {
     isRecording.value = false;
-    toast.error('录音失败，请检查权限');
+    console.error('录音失败详细信息:', err);
+    toast.error('录音失败: ' + (err.errMsg || '未知错误'));
   });
   
   innerAudioContext.onPlay(() => {
@@ -159,10 +160,31 @@ async function loadPending() {
 }
 
 function startRecord() {
-  uni.vibrateShort(); // 震动反馈
-  recorderManager.start({
-    format: 'aac',
-    duration: 60000 // 最长1分钟
+  uni.authorize({
+    scope: 'scope.record',
+    success() {
+      uni.vibrateShort({
+        success: () => {},
+        fail: () => {}
+      });
+      recorderManager.start({
+        format: 'mp3',
+        duration: 60000 // 最长1分钟
+      });
+    },
+    fail() {
+      toast.error('请授权麦克风权限以录制语音');
+      // 如果曾经拒绝过，可以引导去设置页
+      uni.showModal({
+        title: '权限提示',
+        content: '需要麦克风权限才能录制专属告白哦，是否去设置打开？',
+        success: (res) => {
+          if (res.confirm) {
+            uni.openSetting();
+          }
+        }
+      });
+    }
   });
 }
 
