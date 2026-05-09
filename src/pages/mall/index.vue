@@ -33,6 +33,22 @@
     <!-- 兑换商城 -->
     <view class="tab-content" v-if="activeTab === 'mall'">
       <view class="mall-list">
+        <!-- 专属头像框特权入口 -->
+        <view class="mall-card frame-entry-card" @click="goFrameDetail">
+          <view class="icon-wrap frame-wrap">
+            <text class="emoji">🔲</text>
+          </view>
+          <view class="item-info">
+            <text class="name highlight-name">专属头像框合集</text>
+            <text class="desc">永久获得炫酷专属头像框（深邃黑金、机甲科技、赛博朋克、浪漫守护等风格可选）</text>
+            <view class="price-row">
+              <text class="price">多价格 <text class="unit">可选</text></text>
+              <text class="tag permanent">永久有效</text>
+            </view>
+          </view>
+          <button class="redeem-btn frame-btn">去选购</button>
+        </view>
+
         <view v-for="item in items" :key="item.id" class="mall-card">
           <view class="icon-wrap" :class="'type-' + item.itemType">
             <ExemptionIcon v-if="item.itemType === 2" :size="60" />
@@ -66,6 +82,28 @@
       </view>
 
       <view v-else class="rights-list">
+        <!-- 我的头像框入口 -->
+        <view class="rights-card frame-rights-card" @click="goFrameDetail">
+          <view class="card-glow"></view>
+          <view class="card-main">
+            <view class="icon-section">
+              <text class="emoji-icon">🔲</text>
+            </view>
+            <view class="info-section">
+              <view class="name-row">
+                <text class="name">我的头像框</text>
+                <text class="status-tag active">有效中</text>
+              </view>
+              <text class="desc">管理和穿戴你已拥有的专属头像框特效。</text>
+              <text class="time">永久</text>
+            </view>
+          </view>
+          <view class="card-footer">
+            <view class="usage-info"><text class="count">可无限次切换</text></view>
+            <button class="use-btn">去穿戴</button>
+          </view>
+        </view>
+
         <view
           v-for="item in list"
           :key="item.id"
@@ -169,6 +207,10 @@ const selectedInventoryId = ref<number | null>(null);
 
 function goBack() {
   uni.navigateBack();
+}
+
+function goFrameDetail() {
+  uni.navigateTo({ url: '/pages/mall/frame-detail' });
 }
 
 function switchTab(tab: string) {
@@ -395,6 +437,14 @@ onMounted(() => {
   color: #FFF; font-size: 24rpx; font-weight: bold;
   border-radius: 30rpx; flex-shrink: 0;
 }
+
+.frame-entry-card {
+  border: 2rpx solid rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, #1C1E2B, #2a2a2a);
+}
+.frame-wrap { background: #333; }
+.highlight-name { color: #d4af37; }
+.frame-btn { background: linear-gradient(90deg, #d4af37, #f9e295); color: #000; }
 
 /* ================= 我的权益 ================= */
 .rights-list { display: flex; flex-direction: column; gap: 30rpx; }

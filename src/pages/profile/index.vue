@@ -26,7 +26,7 @@
 
     <view class="profile-card" :style="profileCardStyle">
       <button class="avatar-wrapper" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
-        <image class="avatar" :src="user.info?.avatar || '/static/love.png'" mode="aspectFill" />
+        <AvatarWithFrame :avatarUrl="user.info?.avatar || '/static/love.png'" :frameCode="currentFrameCode" :size="120" />
         <view class="avatar-edit-tag">更换</view>
       </button>
       <view class="info">
@@ -156,8 +156,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { coupleApi, userApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
+import { coupleApi, userApi, avatarFrameApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useUserStore } from '@/store/user';
+import AvatarWithFrame from '@/components/AvatarWithFrame/AvatarWithFrame.vue';
 import { BASE_URL } from '@/utils/request';
 import { usePointsStore } from '@/store/points';
 import PointsCard from './PointsCard.vue';
@@ -267,6 +268,7 @@ const pendingReward = ref(0);
 
 const showEditNickname = ref(false);
 const tempNickname = ref('');
+const currentFrameCode = ref('');
 
 function onNicknameBlur(e: any) {
   tempNickname.value = e.detail.value;
@@ -430,6 +432,11 @@ async function load() {
       pendingReward.value = me.user.hasUnreadReward;
     }
 
+    try {
+      const frameRes = await avatarFrameApi.my();
+      currentFrameCode.value = frameRes.currentCode || '';
+    } catch(e) {}
+
     const { checkAndPrompt } = useSubscribeGuide('profile', 1000);
     checkAndPrompt();
   } catch {}
@@ -535,7 +542,6 @@ async function goSubscribe() {
   position: relative;
   &::after { border: none; }
 }
-.avatar { width: 120rpx; height: 120rpx; border-radius: 50%; border: 4rpx solid #fff; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1); }
 .avatar-edit-tag {
   position: absolute; bottom: 0; left: 0; right: 0;
   background: rgba(0,0,0,0.3); color: #fff; font-size: 18rpx;

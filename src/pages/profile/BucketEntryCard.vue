@@ -35,7 +35,7 @@ function goToBucketList() {
   overflow: hidden;
   box-shadow: 0 8rpx 20rpx rgba(112, 225, 245, 0.2);
   height: 140rpx;
-  
+
   &:active {
     transform: scale(0.98);
   }
@@ -45,7 +45,7 @@ function goToBucketList() {
   position: absolute;
   inset: 0;
   z-index: 0;
-  
+
   .wave {
     position: absolute;
     width: 200%;
@@ -76,24 +76,24 @@ function goToBucketList() {
 .left {
   display: flex;
   align-items: center;
-  
+
   .icon {
     font-size: 56rpx;
     margin-right: 20rpx;
     filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.1));
   }
-  
+
   .text-info {
     display: flex;
     flex-direction: column;
-    
+
     .title {
       font-size: 32rpx;
       font-weight: 700;
       color: #fff;
       text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
     }
-    
+
     .subtitle {
       font-size: 24rpx;
       color: rgba(255,255,255,0.9);

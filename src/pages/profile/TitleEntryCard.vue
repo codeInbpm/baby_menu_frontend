@@ -40,7 +40,7 @@ function goTitle() {
   border-radius: 32rpx;
   overflow: hidden;
   box-shadow: 0 10rpx 30rpx rgba(102, 126, 234, 0.2);
-  
+
   .bg-pattern {
     position: absolute;
     top: 0; left: 0;
@@ -50,7 +50,7 @@ function goTitle() {
 
   .card-bg {
     position: absolute; inset: 0; z-index: 0;
-    
+
     .light-beam {
       position: absolute;
       width: 100rpx;
@@ -62,12 +62,12 @@ function goTitle() {
       animation: sweepBeam 4s infinite linear;
     }
   }
-  
+
   @keyframes sweepBeam {
     0% { left: -50%; }
     50%, 100% { left: 150%; }
   }
-  
+
   .content {
     position: relative;
     z-index: 1;
@@ -76,21 +76,21 @@ function goTitle() {
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .left {
     display: flex;
     align-items: center;
-    
+
     .icon {
       font-size: 56rpx;
       margin-right: 20rpx;
       filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.1));
     }
-    
+
     .text-info {
       display: flex;
       flex-direction: column;
-      
+
       .title {
         font-size: 32rpx;
         font-weight: bold;
@@ -111,7 +111,7 @@ function goTitle() {
       }
     }
   }
-  
+
   .right {
     .btn {
       background: rgba(255, 255, 255, 0.2);

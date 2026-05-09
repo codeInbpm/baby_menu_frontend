@@ -72,6 +72,10 @@
     {
       "path": "pages/mall/inventory",
       "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/mall/frame-detail",
+      "style": { "navigationStyle": "custom" }
     }
   ],
   "globalStyle": {
