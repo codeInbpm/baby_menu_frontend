@@ -89,7 +89,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { requestApi } from '@/api';
+import {mallApi, requestApi} from '@/api';
 import { useUserStore } from '@/store/user';
 
 const user = useUserStore();

@@ -85,7 +85,7 @@
               </view>
               <text class="req-time">{{ formatTime(req.createTime) }}</text>
             </view>
-            <wd-icon v-if="req.score > 0 && req.score < 3" name="warn-bold" color="#d4af37" size="20px" />
+            <wd-icon v-if="req.score > 0 && req.score <= 3" name="warn-bold" color="#d4af37" size="20px" />
             <wd-icon v-else name="arrow-right" />
           </view>
           
@@ -164,12 +164,20 @@ async function onUse(item: any) {
       console.log('[权益包] 所有服务:', all.map((r: any) => ({ id: r.id, score: r.score, status: r.status, isExemptionUsed: r.isExemptionUsed })));
       
       activeRequests.value = all.filter((r: any) => {
-        const isOngoing = r.status === 1 && !r.isExemptionUsed;
-        const isLowScore = r.status === 2
-          && r.score !== null && r.score !== undefined
-          && Number(r.score) > 0 && Number(r.score) < 3
-          && !r.isExemptionUsed;
-        return isOngoing || isLowScore;
+        if (r.isExemptionUsed) return false;
+        
+        // 1. 进行中的请求 (Status: 1 - Accepted)
+        if (r.status === 1) return true;
+        
+        // 2. 已完成的请求 (Status: 2 - Finished)
+        if (r.status === 2) {
+          // 如果还没评过分，允许预先保护
+          if (r.score === null || r.score === undefined || r.score === 0) return true;
+          // 如果评过分了，只有 <= 3 分的允许补救
+          return Number(r.score) <= 3;
+        }
+        
+        return false;
       });
       console.log('[权益包] 筛选后可保护:', activeRequests.value);
       showUsePicker.value = true;
