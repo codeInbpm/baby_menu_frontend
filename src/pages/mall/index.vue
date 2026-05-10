@@ -1,5 +1,6 @@
 <template>
-  <view class="mall-page">
+  <view class="page-root" :style="themeStore.themeStyle">
+    <view class="mall-page">
     <view class="nav-bar">
 <!--      <view class="back-btn" @click="goBack">-->
 <!--        <wd-icon name="arrow-left" size="24px" color="#FFF" />-->
@@ -49,7 +50,23 @@
           <button class="redeem-btn frame-btn">去选购</button>
         </view>
 
-        <view v-for="item in items" :key="item.id" class="mall-card">
+        <!-- 专属皮肤合集入口 -->
+        <view class="mall-card skin-entry-card" v-if="themeStore.isOwner" @click="openSkinSelector">
+          <view class="icon-wrap skin-wrap">
+            <text class="emoji">🎨</text>
+          </view>
+          <view class="item-info">
+            <text class="name highlight-skin">管家专属皮肤合集</text>
+            <text class="desc">永久解锁深色高级风、赛博朋克风、机甲科技风等专属小程序全局主题皮肤！</text>
+            <view class="price-row">
+              <text class="price">多价格 <text class="unit">可选</text></text>
+              <text class="tag permanent">永久有效</text>
+            </view>
+          </view>
+          <button class="redeem-btn skin-btn">去选购</button>
+        </view>
+
+        <view v-for="item in items.filter(i => i.itemType !== 5)" :key="item.id" class="mall-card">
           <view class="icon-wrap" :class="'type-' + item.itemType">
             <ExemptionIcon v-if="item.itemType === 2" :size="60" />
             <view v-else-if="item.itemType === 4" class="confession-icon-wrap">
@@ -129,8 +146,29 @@
           </view>
         </view>
 
+        <!-- 我的皮肤入口 -->
+        <view class="rights-card skin-rights-card" v-if="themeStore.isOwner" @click="openSkinSelector">
+          <view class="card-glow skin"></view>
+          <view class="card-main">
+            <view class="icon-section">
+              <text class="emoji-icon">🎨</text>
+            </view>
+            <view class="info-section">
+              <view class="name-row">
+                <text class="name">管家专属皮肤</text>
+                <text class="status-tag active">已开启</text>
+              </view>
+              <text class="desc">管理和切换你的专属管家主题皮肤，彰显独特地位。</text>
+            </view>
+          </view>
+          <view class="card-footer">
+            <view class="usage-info"><text class="count">永久有效</text></view>
+            <button class="use-btn">去切换</button>
+          </view>
+        </view>
+
         <view
-          v-for="item in list"
+          v-for="item in list.filter(i => i.itemType !== 5)"
           :key="item.id"
           class="rights-card"
           :class="{ 'used': item.status === 1, 'expired': isExpired(item) }"
@@ -205,12 +243,14 @@
 
     <wd-toast id="wd-toast" />
     <wd-message-box id="wd-message-box" />
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { mallApi, pointsApi, requestApi } from '@/api';
+import { mallApi, pointsApi, requestApi, skinApi } from '@/api';
+import { useThemeStore } from '@/store/theme';
 import { useToast, useMessage } from 'wot-design-uni';
 import ExemptionIcon from '@/components/ExemptionIcon/ExemptionIcon.vue';
 import dayjs from 'dayjs';
@@ -221,7 +261,9 @@ const activeTab = ref('mall'); // 'mall' | 'inventory'
 
 // ==== Mall State ====
 const items = ref<any[]>([]);
+const skins = ref<any[]>([]);
 const points = ref(0);
+const themeStore = useThemeStore();
 
 // ==== Inventory State ====
 const list = ref<any[]>([]);
@@ -242,6 +284,10 @@ function goConfessionList() {
   uni.navigateTo({ url: '/pages/confession/list' });
 }
 
+function openSkinSelector() {
+  uni.navigateTo({ url: '/pages/mall/skins' });
+}
+
 function switchTab(tab: string) {
   activeTab.value = tab;
   if (tab === 'inventory' && list.value.length === 0) {
@@ -251,12 +297,14 @@ function switchTab(tab: string) {
 
 async function loadData() {
   try {
-    const [itemList, pointInfo] = await Promise.all([
+    const [itemList, pointInfo, skinList] = await Promise.all([
       mallApi.items(),
-      pointsApi.info()
+      pointsApi.info(),
+      themeStore.isOwner ? skinApi.list() : Promise.resolve([])
     ]);
     items.value = itemList;
     points.value = pointInfo.currentPoints || 0;
+    skins.value = skinList;
   } catch (e) {
     toast.error('加载商城数据失败');
   }
@@ -303,6 +351,29 @@ async function handleRedeem(item: any) {
     if (activeTab.value === 'inventory' || list.value.length > 0) {
       loadInventory();
     }
+  } catch (e: any) {
+    if (e !== 'cancel') toast.error(e.message || '兑换失败');
+  }
+}
+
+async function handleRedeemSkin(skin: any) {
+  try {
+    if (skin.unlocked) {
+      // 已经拥有，跳转去使用
+      activeTab.value = 'inventory';
+      return;
+    }
+    await messageBox.confirm({
+      title: '确认兑换',
+      content: `确定消耗 ${skin.price} 积分兑换永久皮肤「${skin.name}」吗？`,
+      confirmButtonText: '立即兑换'
+    });
+
+    toast.loading('兑换中...');
+    await skinApi.exchange(skin.id);
+    toast.success('兑换成功，快去权益中使用吧！');
+    
+    loadData();
   } catch (e: any) {
     if (e !== 'cancel') toast.error(e.message || '兑换失败');
   }
@@ -579,4 +650,18 @@ onMounted(() => {
   .req-time { font-size: 22rpx; color: rgba(255,255,255,0.4); margin-top: 6rpx; display: block; }
 }
 .no-req { padding: 60rpx 0; text-align: center; color: rgba(255,255,255,0.4); font-size: 26rpx; }
+
+.skin-card {
+  border: 2rpx solid rgba(0, 240, 255, 0.3);
+  background: linear-gradient(135deg, #1A1A24, #0D0D14);
+}
+.highlight-skin { color: #00F0FF; }
+.used-btn { background: #444; color: #aaa; }
+.preview-img { width: 100%; height: 100%; border-radius: 20rpx; }
+
+.skin-rights-card {
+  border-color: rgba(0, 240, 255, 0.3);
+  .card-glow.skin { background: radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, transparent 70%); }
+  .name { color: #00F0FF !important; }
+}
 </style>

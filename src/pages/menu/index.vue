@@ -1,7 +1,8 @@
 <template>
-  <view class="menu-page" :class="user.themeClass">
-    <!-- 沉浸式背景图 -->
-    <image class="bg-img" :src="'/static/bg.png'" mode="aspectFill" />
+  <view class="page-root" :style="themeStore.themeStyle">
+    <view class="menu-page" :class="user.themeClass">
+    <!-- 沉浸式背景图 - 仅在默认皮肤下显示 -->
+    <image v-if="themeStore.currentSkinCode === 'default'" class="bg-img" :src="'/static/bg.png'" mode="aspectFill" />
 
     <view class="main-content">
       <!-- 顶部 -->
@@ -99,6 +100,7 @@
         </view>
       </view>
     </view>
+    </view>
   </view>
 </template>
 
@@ -108,9 +110,11 @@ import { onLoad } from '@dcloudio/uni-app';
 import { menuApi, requestApi, userApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useCartStore } from '@/store/cart';
 import { useUserStore } from '@/store/user';
+import { useThemeStore } from '@/store/theme';
 
 const cart = useCartStore();
 const user = useUserStore();
+const themeStore = useThemeStore();
 
 const categories = ref<any[]>([]);
 const items = ref<any[]>([]);
@@ -303,20 +307,23 @@ page {
   padding: 10rpx 28rpx 20rpx;
 }
 .cur-cat {
-  font-size: 28rpx; color: #555; font-weight: 600;
+  font-size: 28rpx; color: var(--text-color); font-weight: 600;
+  opacity: 0.8;
 }
 .actions { display: flex; align-items: center; gap: 14rpx; }
 .pill.outline {
-  font-size: 24rpx; color: #1FCB6A;
-  border: 2rpx solid #1FCB6A; padding: 8rpx 18rpx; border-radius: 999rpx;
-  background: #fff;
+  font-size: 24rpx; color: var(--primary-color);
+  border: 2rpx solid var(--primary-color); padding: 8rpx 18rpx; border-radius: 999rpx;
+  background: var(--card-bg);
 }
 .search {
-  display: flex; align-items: center; background: #F2F2F2;
+  display: flex; align-items: center; background: var(--bg-color);
   border-radius: 999rpx; padding: 6rpx 16rpx; height: 48rpx;
+  opacity: 0.8;
+  border: 1rpx solid rgba(255,255,255,0.1);
 }
-.search-icon { font-size: 22rpx; color: #888; margin-right: 6rpx; }
-.search-input { font-size: 24rpx; width: 90rpx; }
+.search-icon { font-size: 22rpx; color: var(--secondary-text); margin-right: 6rpx; }
+.search-input { font-size: 24rpx; width: 90rpx; color: var(--text-color); }
 
 /* ===== body ===== */
 .body {
@@ -331,14 +338,14 @@ page {
   height: 100%;
 }
 .side-item {
-  font-size: 26rpx; color: #666;
+  font-size: 26rpx; color: var(--secondary-text);
   padding: 26rpx 14rpx;
   border-radius: 16rpx;
   margin-bottom: 8rpx;
   text-align: left;
 }
 .side-item.active {
-  background: #fff;
+  background: var(--card-bg);
   color: var(--primary-color);
   font-weight: 700;
   box-shadow: 0 2rpx 10rpx var(--card-shadow);
@@ -350,18 +357,19 @@ page {
   height: 100%;
 }
 .content-title {
-  font-size: 28rpx; font-weight: 700; color: #333; padding: 8rpx 0 16rpx;
+  font-size: 28rpx; font-weight: 700; color: var(--text-color); padding: 8rpx 0 16rpx;
 }
 
 .dish-card {
   position: relative;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 24rpx;
   margin-bottom: 24rpx;
   display: flex;
   align-items: center;
   padding: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, .03);
+  box-shadow: 0 2rpx 10rpx var(--card-shadow);
+  border: 1rpx solid rgba(255,255,255,0.05);
 }
 .dish-img {
   width: 160rpx; height: 160rpx;
@@ -369,20 +377,21 @@ page {
   margin-right: 24rpx;
 }
 .dish-info { flex: 1; }
-.dish-name { font-size: 30rpx; color: #333; font-weight: 600; }
+.dish-name { font-size: 30rpx; color: var(--text-color); font-weight: 600; }
 .duration-tag {
   display: inline-block; margin-top: 14rpx;
-  background: #ECF8EE; color: #1FCB6A;
-  border: 2rpx solid #B8E6C2;
+  background: var(--bg-color); color: var(--primary-color);
+  border: 2rpx solid var(--primary-color);
   border-radius: 999rpx;
   padding: 4rpx 16rpx; font-size: 22rpx;
+  opacity: 0.8;
 }
 .add-btn {
   width: 56rpx; height: 56rpx; border-radius: 50%;
-  background: #1FCB6A; color: #fff;
+  background: var(--primary-color); color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 36rpx; font-weight: 700;
-  box-shadow: 0 4rpx 10rpx rgba(31, 203, 106, .3);
+  box-shadow: 0 4rpx 10rpx var(--card-shadow);
 }
 .add-btn.added { background: var(--primary-color); box-shadow: 0 4rpx 10rpx var(--card-shadow); }
 
@@ -419,12 +428,13 @@ page {
   z-index: 999;
 }
 .modal {
-  width: 600rpx; background: #fff; border-radius: 32rpx;
+  width: 600rpx; background: var(--card-bg); border-radius: 32rpx;
   padding: 40rpx 32rpx; text-align: center;
+  border: 1rpx solid rgba(255,255,255,0.1);
 }
 .modal-title { font-size: 34rpx; font-weight: 700; color: var(--primary-color); }
 .modal-body { padding: 24rpx 0; max-height: 400rpx; overflow-y: auto; }
-.modal-row { font-size: 28rpx; color: #555; margin: 10rpx 0; text-align: left; }
+.modal-row { font-size: 28rpx; color: var(--text-color); margin: 10rpx 0; text-align: left; opacity: 0.8; }
 .modal-actions { display: flex; gap: 20rpx; margin-top: 16rpx; }
 .modal-btn {
   flex: 1; padding: 22rpx 0; border-radius: 999rpx;

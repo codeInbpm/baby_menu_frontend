@@ -78,6 +78,10 @@
       "style": { "navigationStyle": "custom" }
     },
     {
+      "path": "pages/mall/skins",
+      "style": { "navigationBarTitleText": "个性皮肤" }
+    },
+    {
       "path": "pages/confession/pending",
       "style": { "navigationStyle": "custom" }
     },

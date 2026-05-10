@@ -1,5 +1,6 @@
 <template>
-  <view class="page" :class="user.themeClass">
+  <view class="page-root" :style="themeStore.themeStyle">
+    <view class="page" :class="user.themeClass">
     <!-- 奖励动画遮罩 -->
     <view class="reward-overlay" :class="{ 'active': showRewardAnimation }">
       <!-- 梦幻光斑背景 -->
@@ -153,6 +154,7 @@
         </view>
       </view>
     </wd-popup>
+    </view>
   </view>
 </template>
 
@@ -161,7 +163,9 @@ import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { coupleApi, userApi, avatarFrameApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useUserStore } from '@/store/user';
+import { useThemeStore } from '@/store/theme';
 import AvatarWithFrame from '@/components/AvatarWithFrame/AvatarWithFrame.vue';
+const themeStore = useThemeStore();
 import { BASE_URL } from '@/utils/request';
 import { usePointsStore } from '@/store/points';
 import PointsCard from './PointsCard.vue';
@@ -527,9 +531,10 @@ async function goSubscribe() {
 <style lang="scss" scoped>
 .page { 
   min-height: 100vh;
-  background: #fcf8fa;
+  background: var(--bg-color);
   padding: 32rpx 0; 
   padding-bottom: 60rpx;
+  transition: all 0.3s ease;
 }
 .profile-card {
   margin: 0 32rpx 32rpx;
@@ -600,10 +605,10 @@ async function goSubscribe() {
 }
 
 .switch-notify {
-  margin: 0 32rpx 32rpx; background: #fff; border-radius: 24rpx;
+  margin: 0 32rpx 32rpx; background: var(--card-bg); border-radius: 24rpx;
   padding: 30rpx; box-shadow: 0 4rpx 20rpx var(--card-shadow);
   display: flex; flex-direction: column; align-items: center; text-align: center;
-  border: 2rpx solid var(--bg-color);
+  border: 2rpx solid rgba(255,255,255,0.05);
 }
 .switch-notify.waiting {
   background: #FCFAFA; border: 2rpx dashed #eee; box-shadow: none;
@@ -678,13 +683,14 @@ async function goSubscribe() {
 
 .menu { 
   margin: 0 32rpx;
-  background: #fff; border-radius: 24rpx; overflow: hidden; 
-  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.04);
+  background: var(--card-bg); border-radius: 24rpx; overflow: hidden; 
+  box-shadow: 0 8rpx 20rpx var(--card-shadow);
+  border: 1rpx solid rgba(255,255,255,0.05);
 }
 .row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 32rpx; font-size: 28rpx; color: #333;
-  border-bottom: 1rpx solid #f9f9f9;
+  padding: 32rpx; font-size: 28rpx; color: var(--text-color);
+  border-bottom: 1rpx solid rgba(255,255,255,0.05);
 }
 .row:last-child { border-bottom: none; }
 .row.disabled { color: #aaa; }
@@ -811,12 +817,12 @@ async function goSubscribe() {
 
 /* 编辑弹窗 */
 .edit-popup {
-  background: #fff; padding: 40rpx;
-  .popup-title { font-size: 32rpx; font-weight: bold; color: #333; text-align: center; margin-bottom: 30rpx; }
+  background: var(--card-bg); padding: 40rpx;
+  .popup-title { font-size: 32rpx; font-weight: bold; color: var(--text-color); text-align: center; margin-bottom: 30rpx; }
   .input-wrap {
-    background: #f5f5f5; border-radius: 12rpx; padding: 20rpx;
+    background: var(--bg-color); border-radius: 12rpx; padding: 20rpx;
     margin-bottom: 20rpx;
-    .nickname-input { width: 100%; height: 80rpx; font-size: 30rpx; }
+    .nickname-input { width: 100%; height: 80rpx; font-size: 30rpx; color: var(--text-color); }
   }
   .popup-tips { font-size: 24rpx; color: #999; text-align: center; margin-bottom: 40rpx; }
   .popup-footer {

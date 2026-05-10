@@ -1,5 +1,6 @@
 <template>
-  <view class="page">
+  <view class="page-root" :style="themeStore.themeStyle">
+    <view class="page">
     <view class="tabs">
       <view
         v-for="t in tabs"
@@ -45,8 +46,10 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { requestApi } from '@/api';
 import { useUserStore } from '@/store/user';
+import { useThemeStore } from '@/store/theme';
 
 const user = useUserStore();
+const themeStore = useThemeStore();
 const selfId = computed(() => user.info?.id);
 const isPet = computed(() => user.info?.roleInCouple === 'pet');
 
@@ -98,23 +101,23 @@ onShow(load);
 
 <style lang="scss" scoped>
 .page { padding: 24rpx; }
-.tabs { display: flex; background: #fff; border-radius: 999rpx; padding: 6rpx; margin-bottom: 24rpx; }
-.tab { flex: 1; text-align: center; padding: 16rpx 0; font-size: 26rpx; color: #888; border-radius: 999rpx; }
-.tab.active { background: linear-gradient(135deg, #FF8FB3, #FF6FA0); color: #fff; font-weight: 600; }
+.tabs { display: flex; background: var(--card-bg); border-radius: 999rpx; padding: 6rpx; margin-bottom: 24rpx; border: 1rpx solid rgba(255,255,255,0.05); }
+.tab { flex: 1; text-align: center; padding: 16rpx 0; font-size: 26rpx; color: var(--secondary-text); border-radius: 999rpx; }
+.tab.active { background: var(--gradient); color: #fff; font-weight: 600; }
 
-.card { background: #fff; border-radius: 20rpx; padding: 24rpx; margin-bottom: 16rpx; }
+.card { background: var(--card-bg); border-radius: 20rpx; padding: 24rpx; margin-bottom: 16rpx; box-shadow: 0 4rpx 12rpx var(--card-shadow); border: 1rpx solid rgba(255,255,255,0.05); }
 .top { display: flex; justify-content: space-between; align-items: center; }
-.content { font-size: 30rpx; color: #333; font-weight: 600; }
+.content { font-size: 30rpx; color: var(--text-color); font-weight: 600; }
 .status { font-size: 22rpx; padding: 4rpx 14rpx; border-radius: 999rpx; }
-.s-0 { background: #FFF1E0; color: #F0A040; }
-.s-1 { background: #E0F1FF; color: #4080F0; }
-.s-2 { background: #ECF8EE; color: #1FCB6A; }
-.s-3 { background: #FBE6E6; color: #ff5b5b; }
-.meta { display: flex; justify-content: space-between; align-items: center; margin-top: 14rpx; font-size: 22rpx; color: #999; }
+.s-0 { background: var(--bg-color); color: #F0A040; opacity: 0.9; }
+.s-1 { background: var(--bg-color); color: #4080F0; opacity: 0.9; }
+.s-2 { background: var(--bg-color); color: #1FCB6A; opacity: 0.9; }
+.s-3 { background: var(--bg-color); color: #ff5b5b; opacity: 0.9; }
+.meta { display: flex; justify-content: space-between; align-items: center; margin-top: 14rpx; font-size: 22rpx; color: var(--secondary-text); }
 .meta-left { display: flex; align-items: center; gap: 12rpx; }
 .stars { color: #FFD700; letter-spacing: 2rpx; font-size: 20rpx; }
 .exemption-tag { font-size: 18rpx; color: #d4af37; background: rgba(212, 175, 55, 0.1); padding: 2rpx 10rpx; border-radius: 8rpx; border: 1rpx solid rgba(212, 175, 55, 0.3); }
-.empty { text-align: center; padding: 100rpx 0; color: #B8A8B0; }
+.empty { text-align: center; padding: 100rpx 0; color: var(--secondary-text); }
 
 .butler-warning-banner {
   background: linear-gradient(90deg, #1e2439, #2c2c2c);

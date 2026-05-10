@@ -125,6 +125,18 @@ export const confessionApi = {
   list: () => request<any[]>({ url: '/confession/list' }),
 };
 
+// ================= 皮肤接口 =================
+export const skinApi = {
+  // 获取皮肤列表
+  list: () => request<any[]>({ url: '/mall/skin/list', method: 'GET' }),
+  // 兑换皮肤
+  exchange: (skinId: number) => request({ url: '/mall/skin/exchange', method: 'POST', data: { skinId } }),
+  // 设置/切换皮肤
+  set: (skinCode: string) => request({ url: '/mall/skin/set', method: 'POST', data: { skinCode } }),
+  // 获取当前皮肤配置
+  current: () => request<any>({ url: '/mall/skin/current', method: 'GET' })
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID
