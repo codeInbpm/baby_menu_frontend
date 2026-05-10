@@ -137,7 +137,15 @@ export const skinApi = {
   current: () => request<any>({ url: '/mall/skin/current', method: 'GET' })
 };
 
+export const gameApi = {
+  list: () => request<any[]>({ url: '/game/list' }),
+  record: (data: any) => request({ url: '/game/record', method: 'POST', data }),
+  stats: () => request<any[]>({ url: '/game/stats' }),
+  records: (gameCode: string) => request<any[]>({ url: `/game/records/${gameCode}` }),
+};
+
 // 微信订阅消息模板 ID
 // 当前使用公共模板「留言提醒」(字段: thing1 用户名称 / thing2 备注消息 / time3 留言日期)
 // 如果你换了别的模板，把下面这串替换为你「我的模板」里看到的模板 ID
 export const SUBSCRIBE_TEMPLATE_ID = 'bcMzwddS-N1kX6edujEwu1pDmt0rXPYCXhCzD7HdAhk';
+

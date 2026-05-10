@@ -38,6 +38,7 @@
       </view>
       <view v-if="!list.length" class="empty">暂无记录</view>
     </view>
+    </view>
   </view>
 </template>
 

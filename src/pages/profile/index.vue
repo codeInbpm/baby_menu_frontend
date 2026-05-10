@@ -120,6 +120,9 @@
     <!-- 专属告白入口 -->
     <ConfessionEntryCard v-if="user.bound" />
 
+    <!-- 游戏中心入口 -->
+    <GameEntryCard v-if="user.bound" />
+
     <!-- 积分记录 (双方都可见，因为都能收到分配) -->
     <PointsRecord v-if="user.bound" />
 
@@ -177,6 +180,7 @@ import TitleEntryCard from './TitleEntryCard.vue';
 import BucketEntryCard from './BucketEntryCard.vue';
 import PeriodModule from './PeriodModule.vue';
 import ConfessionEntryCard from './ConfessionEntryCard.vue';
+import GameEntryCard from './GameEntryCard.vue';
 import { useTitleStore } from '@/store/title';
 import { requestSubscribe } from '@/utils/subscribe';
 import { useSubscribeGuide } from '@/utils/subscribeGuide';

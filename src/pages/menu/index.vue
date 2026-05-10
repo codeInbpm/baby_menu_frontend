@@ -15,6 +15,9 @@
           </view>
         </view>
         <view class="topbar-right">
+          <view class="icon-btn" @click="goGames">
+            <text class="iconfont">🎮</text>
+          </view>
           <view class="icon-btn" @click="goRequests">
             <text class="iconfont">⌗</text>
           </view>
@@ -185,6 +188,7 @@ function goAddItem() {
   uni.navigateTo({ url: `/pages/manage/item?categoryId=${currentCategoryId.value || ''}` });
 }
 function goRequests() { uni.navigateTo({ url: '/pages/request/list' }); }
+function goGames() { uni.navigateTo({ url: '/pages/game/index' }); }
 
 function onCartTap() {
   if (!cart.count) {

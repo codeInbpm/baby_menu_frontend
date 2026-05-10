@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
+
 
 const props = defineProps({
   avatarUrl: { type: String, default: '' },
