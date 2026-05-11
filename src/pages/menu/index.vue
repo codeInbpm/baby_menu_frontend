@@ -8,7 +8,7 @@
       <!-- 顶部 -->
       <view class="topbar">
         <view class="user">
-          <image class="avatar" :src="coupleAvatar" mode="aspectFill" />
+          <image class="avatar" :src="fixUrl(coupleAvatar)" mode="aspectFill" />
           <view class="title-block">
             <view class="title">宝贝的专属菜单</view>
             <view class="subtitle">全都是你的最爱 💜</view>
@@ -60,7 +60,7 @@
         <scroll-view class="content" scroll-y>
           <view class="content-title">{{ currentCategoryTitle }}</view>
           <view v-for="it in filteredItems" :key="it.id" class="dish-card">
-            <image class="dish-img" :src="it.imageUrl || defaultImg" mode="aspectFill" />
+            <image class="dish-img" :src="fixUrl(it.imageUrl) || defaultImg" mode="aspectFill" />
             <view class="dish-info">
               <view class="dish-name">{{ it.name }}</view>
               <view v-if="it.duration" class="duration-tag">{{ it.duration }} 分钟</view>
@@ -69,7 +69,7 @@
               v-if="isPet"
               class="add-btn"
               :class="{ added: cart.has(it.id) }"
-              @click="cart.toggle({ id: it.id, name: it.name, imageUrl: it.imageUrl })"
+              @click="cart.toggle({ id: it.id, name: it.name, imageUrl: it.imageUrl, pointsCost: it.pointsCost || 0, description: it.description })"
             >
               <text>{{ cart.has(it.id) ? '✓' : '+' }}</text>
             </view>
@@ -79,8 +79,8 @@
       </view>
     </view>
 
-    <!-- 悬浮购物车 -->
-    <view v-if="isPet" class="cart-fab" @click="onCartTap">
+    <!-- 悬浮购物车 (打开详情时隐藏) -->
+    <view v-if="isPet && !confirmShow" class="cart-fab" @click="onCartTap">
       <text class="cart-icon">🛒</text>
       <view v-if="cart.count" class="badge">{{ cart.count }}</view>
     </view>
@@ -90,19 +90,48 @@
        专属管家，请等待小宝贝点单哦～
     </view>
 
-    <!-- 通知宝贝 弹窗 -->
-    <view v-if="confirmShow" class="modal-mask" @click="closeConfirm">
-      <view class="modal" @click.stop="() => {}">
-        <view class="modal-title">通知宝贝？</view>
-        <view class="modal-body">
-          <view v-for="i in cart.items" :key="i.id" class="modal-row">· {{ i.name }}</view>
+    <!-- 购物车详情弹窗 (美团风格) -->
+    <wd-popup v-model="confirmShow" position="bottom" custom-style="border-radius: 32rpx 32rpx 0 0;">
+      <view class="cart-popup" v-if="cart.count > 0">
+        <view class="popup-header">
+          <text class="p-title">已加购商品</text>
+          <view class="clear-btn" @click="cart.clear()">
+            <wd-icon name="delete" size="14px" /> 清空
+          </view>
         </view>
-        <view class="modal-footer">
-          <view class="modal-btn ghost" @click="closeConfirm">再想想</view>
-          <view class="modal-btn primary" @click="sendRequest">马上通知！</view>
+        
+        <scroll-view scroll-y class="popup-list">
+          <view v-for="i in cart.items" :key="i.id" class="cart-item">
+            <image class="item-img" :src="fixUrl(i.imageUrl) || defaultImg" mode="aspectFill" />
+            <view class="item-info">
+              <view class="item-name">{{ i.name }}</view>
+              <view class="item-desc" v-if="i.description">{{ i.description }}</view>
+              <view class="item-price" v-if="i.pointsCost">💎 {{ i.pointsCost }} 积分</view>
+              <view class="item-price" v-else>免费 ❤️</view>
+            </view>
+            <view class="item-actions">
+              <view class="btn-minus" @click="cart.remove(i.id)">-</view>
+              <text class="num">1</text>
+              <view class="btn-plus disabled">+</view>
+            </view>
+          </view>
+        </scroll-view>
+
+        <view class="popup-footer">
+          <view class="total-info">
+            <text class="label">预计消耗：</text>
+            <text class="total-val">{{ cart.totalPointsCost }}</text>
+            <text class="unit">积分</text>
+          </view>
+          <button class="btn-submit" @click="sendRequest">去结算 ❤️</button>
         </view>
       </view>
-    </view>
+      <view class="cart-empty" v-else>
+        <image class="empty-img" src="/static/empty_cart.png" mode="aspectFit" />
+        <text>购物车空空如也~</text>
+        <button class="btn-go" @click="confirmShow = false">去点餐</button>
+      </view>
+    </wd-popup>
     </view>
   </view>
 </template>
@@ -114,6 +143,7 @@ import { menuApi, requestApi, userApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useCartStore } from '@/store/cart';
 import { useUserStore } from '@/store/user';
 import { useThemeStore } from '@/store/theme';
+import { fixUrl } from '@/utils/request';
 
 const cart = useCartStore();
 const user = useUserStore();
@@ -447,6 +477,71 @@ page {
 .modal-body { padding: 24rpx 0; max-height: 400rpx; overflow-y: auto; }
 .modal-row { font-size: 28rpx; color: var(--text-color); margin: 10rpx 0; text-align: left; opacity: 0.8; }
 .modal-actions { display: flex; gap: 20rpx; margin-top: 16rpx; }
+
+/* ===== cart-popup ===== */
+.cart-popup {
+  padding: 32rpx; background: var(--card-bg);
+  .popup-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 24rpx; border-bottom: 1rpx solid var(--border-color);
+    .p-title { font-size: 32rpx; font-weight: bold; color: var(--text-color); }
+    .clear-btn { font-size: 24rpx; color: var(--secondary-text); display: flex; align-items: center; gap: 4rpx; }
+  }
+  .popup-list {
+    max-height: 600rpx; min-height: 200rpx;
+    .cart-item {
+      display: flex; align-items: center; padding: 24rpx 0;
+      border-bottom: 1rpx solid rgba(0,0,0,0.05);
+      .item-img { width: 100rpx; height: 100rpx; border-radius: 12rpx; margin-right: 20rpx; background: #f5f5f5; }
+      .item-info {
+        flex: 1;
+        .item-name { font-size: 28rpx; font-weight: bold; color: var(--text-color); }
+        .item-desc { font-size: 22rpx; color: var(--secondary-text); margin-top: 4rpx; 
+          display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden;
+        }
+        .item-price { font-size: 24rpx; color: var(--primary-color); margin-top: 6rpx; font-weight: 500; }
+      }
+      .item-actions {
+        display: flex; align-items: center; gap: 20rpx;
+        .btn-minus {
+          width: 44rpx; height: 44rpx; border-radius: 50%; border: 1rpx solid var(--primary-color);
+          color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 32rpx;
+        }
+        .num { font-size: 28rpx; color: var(--text-color); font-weight: bold; }
+        .btn-plus {
+          width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--primary-color);
+          color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32rpx;
+          &.disabled { opacity: 0.3; }
+        }
+      }
+    }
+  }
+  .popup-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 32rpx; margin-top: 10rpx;
+    .total-info {
+      .label { font-size: 24rpx; color: var(--secondary-text); }
+      .total-val { font-size: 40rpx; font-weight: bold; color: var(--primary-color); margin: 0 4rpx; }
+      .unit { font-size: 22rpx; color: var(--primary-color); }
+    }
+    .btn-submit {
+      margin: 0; background: var(--gradient); color: #fff; border-radius: 44rpx;
+      padding: 0 60rpx; height: 88rpx; line-height: 88rpx; font-size: 30rpx; font-weight: bold;
+      box-shadow: 0 8rpx 20rpx var(--card-shadow);
+      &::after { border: none; }
+    }
+  }
+}
+
+.cart-empty {
+  padding: 80rpx 40rpx; display: flex; flex-direction: column; align-items: center;
+  color: var(--secondary-text); font-size: 28rpx;
+  .empty-img { width: 200rpx; height: 200rpx; margin-bottom: 20rpx; opacity: 0.5; }
+  .btn-go {
+    margin-top: 40rpx; width: 300rpx; background: var(--primary-color); color: #fff;
+    border-radius: 40rpx; &::after { border: none; }
+  }
+}
 .modal-btn {
   flex: 1; padding: 22rpx 0; border-radius: 999rpx;
   font-size: 28rpx;

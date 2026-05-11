@@ -10,7 +10,7 @@
 
     <!-- Cover Image Upload/Display -->
     <view class="cover-section" @click="onUploadCover">
-      <image v-if="form.coverUrl" class="cover-img" :src="form.coverUrl" mode="aspectFill" />
+      <image v-if="form.coverUrl" class="cover-img" :src="fixUrl(form.coverUrl)" mode="aspectFill" />
       <view class="cover-placeholder" v-else>
         <text class="icon">📸</text>
         <text class="text">{{ isAdd ? '添加一张浪漫的封面图吧～' : '还没有封面图哦' }}</text>
@@ -113,13 +113,19 @@
             <view class="complete-time">完成于：{{ formatTime(form.completeTime) }}</view>
             
             <view class="notes-wrap">
-              <view class="note-item" v-if="form.memorialNoteOwner">
-                <image class="small-avatar" :src="getAvatar('owner')" />
-                <view class="bubble">{{ form.memorialNoteOwner }}</view>
+              <view class="note-item" v-if="form.memorialNoteOwner || form.memorialImageOwner">
+                <image class="small-avatar" :src="fixUrl(getAvatar('owner'))" />
+                <view class="note-content">
+                  <view class="bubble" v-if="form.memorialNoteOwner">{{ form.memorialNoteOwner }}</view>
+                  <image class="note-img" v-if="form.memorialImageOwner" :src="fixUrl(form.memorialImageOwner)" mode="widthFix" @click="previewImage(form.memorialImageOwner)" />
+                </view>
               </view>
-              <view class="note-item right" v-if="form.memorialNotePet">
-                <view class="bubble">{{ form.memorialNotePet }}</view>
-                <image class="small-avatar" :src="getAvatar('pet')" />
+              <view class="note-item right" v-if="form.memorialNotePet || form.memorialImagePet">
+                <view class="note-content">
+                  <view class="bubble" v-if="form.memorialNotePet">{{ form.memorialNotePet }}</view>
+                  <image class="note-img" v-if="form.memorialImagePet" :src="fixUrl(form.memorialImagePet)" mode="widthFix" @click="previewImage(form.memorialImagePet)" />
+                </view>
+                <image class="small-avatar" :src="fixUrl(getAvatar('pet'))" />
               </view>
             </view>
             
@@ -140,6 +146,15 @@
       <view class="note-modal">
         <view class="modal-title">写下完成感言</view>
         <textarea class="textarea" v-model="tempNote" placeholder="那一刻的心情是怎样的呢..." :auto-focus="true"></textarea>
+        
+        <view class="image-upload-section" @click="onUploadNoteImage">
+          <image v-if="tempNoteImage" :src="fixUrl(tempNoteImage)" mode="aspectFill" class="temp-img" />
+          <view v-else class="upload-placeholder">
+            <text class="icon">📸</text>
+            <text class="text">上传合照 (可选)</text>
+          </view>
+          <view v-if="tempNoteImage" class="remove-btn" @click.stop="tempNoteImage = ''">×</view>
+        </view>
         <view class="modal-footer">
           <button class="btn-cancel" @click="showNoteModal = false">取消</button>
           <button class="btn-confirm" @click="submitNote">保存</button>
@@ -160,7 +175,7 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { bucketApi } from '@/api';
 import { useUserStore } from '@/store/user';
-import { BASE_URL } from '@/utils/request';
+import { BASE_URL, fixUrl } from '@/utils/request';
 
 const user = useUserStore();
 const isAdd = ref(true);
@@ -176,6 +191,7 @@ const form = ref<any>({
 
 const showNoteModal = ref(false);
 const tempNote = ref('');
+const tempNoteImage = ref('');
 const showCelebration = ref(false);
 
 const categoryList = ref<string[]>([]);
@@ -267,6 +283,31 @@ function uploadSingleFile(path: string): Promise<string> {
   });
 }
 
+async function onUploadNoteImage() {
+  uni.chooseImage({
+    count: 1,
+    success: async (res) => {
+      const tempPath = res.tempFilePaths[0];
+      uni.showLoading({ title: '上传中...' });
+      try {
+        const url = await uploadSingleFile(tempPath);
+        tempNoteImage.value = url;
+        uni.showToast({ title: '上传成功', icon: 'success' });
+      } catch (err: any) {
+        uni.showToast({ title: err.message, icon: 'none' });
+      } finally {
+        uni.hideLoading();
+      }
+    }
+  });
+}
+
+function previewImage(url: string) {
+  uni.previewImage({
+    urls: [url]
+  });
+}
+
 async function submitAdd() {
   if (!form.value.title) return uni.showToast({ title: '请输入愿望标题', icon: 'none' });
   
@@ -327,11 +368,13 @@ function getConfettiStyle(i: number) {
 }
 
 async function submitNote() {
-  if (!tempNote.value) return;
+  if (!tempNote.value && !tempNoteImage.value) return;
   uni.showLoading({ title: '保存中...' });
   try {
-    await bucketApi.updateNote(id.value!, tempNote.value);
+    await bucketApi.updateNote(id.value!, tempNote.value, tempNoteImage.value);
     showNoteModal.value = false;
+    tempNote.value = '';
+    tempNoteImage.value = '';
     uni.showToast({ title: '已保存感言', icon: 'success' });
     loadDetail();
   } catch(e:any) {
@@ -538,6 +581,31 @@ function formatTime(str: string) {
     .btn-cancel { background: #f5f5f5; color: #666; }
     .btn-confirm { background: #FF6FA0; color: #fff; font-weight: bold; }
   }
+}
+
+.image-upload-section {
+  width: 100%; height: 240rpx; background: #f9f9f9; border-radius: 16rpx;
+  display: flex; justify-content: center; align-items: center; position: relative;
+  margin-bottom: 40rpx; overflow: hidden;
+  
+  .temp-img { width: 100%; height: 100%; }
+  
+  .upload-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 12rpx; color: #999;
+    .icon { font-size: 48rpx; }
+    .text { font-size: 24rpx; }
+  }
+  
+  .remove-btn {
+    position: absolute; top: 10rpx; right: 10rpx; width: 40rpx; height: 40rpx;
+    background: rgba(0,0,0,0.5); color: #fff; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center; font-size: 30rpx;
+  }
+}
+
+.note-content {
+  display: flex; flex-direction: column; gap: 16rpx; max-width: 80%;
+  .note-img { width: 100%; border-radius: 16rpx; box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05); }
 }
 
 .celebration {

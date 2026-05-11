@@ -99,7 +99,7 @@ export const bucketApi = {
   list: (current = 1, size = 10, status?: number, category?: string, year?: number) => request<any>({ url: '/bucket/list', params: { current, size, status, category, year } }),
   detail: (id: number) => request<any>({ url: `/bucket/detail/${id}` }),
   check: (id: number) => request({ url: `/bucket/check/${id}`, method: 'POST' }),
-  updateNote: (id: number, note: string) => request({ url: `/bucket/note/${id}`, method: 'POST', data: { note } }),
+  updateNote: (id: number, note: string, imageUrl?: string) => request({ url: `/bucket/note/${id}`, method: 'POST', data: { note, imageUrl } }),
   remove: (id: number) => request({ url: `/bucket/${id}`, method: 'DELETE' }),
   tags: () => request<string[]>({ url: '/bucket/tags' }),
 };

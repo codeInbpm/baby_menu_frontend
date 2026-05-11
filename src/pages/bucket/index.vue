@@ -62,7 +62,7 @@
             :key="item.id" 
             @click="goDetail(item.id)"
           >
-            <image v-if="item.coverUrl" class="card-bg" :src="item.coverUrl" mode="aspectFill" />
+            <image v-if="item.coverUrl" class="card-bg" :src="fixUrl(item.coverUrl)" mode="aspectFill" />
             <view class="card-bg-placeholder" v-else>
               <wd-icon name="picture" size="40px" color="rgba(255,255,255,0.3)"/>
             </view>
@@ -82,13 +82,13 @@
                   <image 
                     class="avatar" 
                     :class="{ checked: item.ownerChecked }"
-                    :src="getAvatar('owner')" 
+                    :src="fixUrl(getAvatar('owner'))" 
                     mode="aspectFill" 
                   />
                   <image 
                     class="avatar" 
                     :class="{ checked: item.petChecked }"
-                    :src="getAvatar('pet')" 
+                    :src="fixUrl(getAvatar('pet'))" 
                     mode="aspectFill" 
                   />
                 </view>
@@ -131,6 +131,7 @@ import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { bucketApi } from '@/api';
 import { useUserStore } from '@/store/user';
+import { fixUrl } from '@/utils/request';
 import { useThemeStore } from '@/store/theme';
 
 const user = useUserStore();

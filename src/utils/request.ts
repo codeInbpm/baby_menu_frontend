@@ -55,3 +55,16 @@ export function request<T = any>(opts: {
     });
   });
 }
+export function fixUrl(url: string | undefined): string {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('https') || url.startsWith('data:')) {
+    return url;
+  }
+  // 处理 // 开头的协议自适应 URL
+  if (url.startsWith('//')) {
+    return 'http:' + url;
+  }
+  // 拼接后端基础地址
+  const base = BASE_URL.replace('/api', '');
+  return base + (url.startsWith('/') ? '' : '/') + url;
+}
