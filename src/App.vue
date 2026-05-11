@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { watch } from 'vue';
 import { onLaunch } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/user';
-
 import { useThemeStore } from '@/store/theme';
 
 onLaunch(() => {
@@ -11,6 +11,12 @@ onLaunch(() => {
   if (u.token) {
     t.initTheme();
   }
+  
+  // 监听皮肤变化，同步原生 UI
+  watch(() => t.currentSkinCode, () => {
+    t.updateTabBarStyle();
+    t.updateNavigationStyle();
+  });
 });
 </script>
 
@@ -34,27 +40,39 @@ page {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 28rpx;
   color: var(--text-color);
-  transition: background 0.4s ease, color 0.4s ease;
+  transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
+  min-height: 100vh;
 }
 
 .page-root {
   min-height: 100vh;
   background: var(--bg-color);
   color: var(--text-color);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
   position: relative;
   
   &::before {
     content: '';
-    position: absolute; inset: 0;
-    box-shadow: inset 0 0 100rpx var(--glow-color);
+    position: fixed; inset: 0;
+    box-shadow: inset 0 0 150rpx var(--glow-color);
     pointer-events: none;
-    opacity: 0.5;
+    opacity: 0.6;
+    z-index: 99;
   }
 }
 
-/* 管家主题 (蓝色系) */
+/* Glassmorphism Card */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border: 1rpx solid var(--border-color);
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx var(--card-shadow);
+}
+
+/* 管家主题 (蓝色系 - 默认样式) */
 .theme-owner {
   --primary-color: #4A90E2;
   --bg-color: #F0F7FF;

@@ -1,5 +1,6 @@
 <template>
-  <view class="page" :class="user.themeClass">
+  <view class="page-root" :style="themeStore.themeStyle">
+    <view class="page">
     <view class="bg-pattern"></view>
     <view class="content-wrap">
       
@@ -93,6 +94,7 @@
       </view>
     </wd-popup>
   </view>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -102,8 +104,10 @@ import { memorialApi } from '@/api';
 import dayjs from 'dayjs';
 import { Lunar } from 'lunar-javascript';
 import { useUserStore } from '@/store/user';
+import { useThemeStore } from '@/store/theme';
 
 const user = useUserStore();
+const themeStore = useThemeStore();
 const memorials = ref<any[]>([]);
 const showAdd = ref(false);
 
@@ -268,7 +272,7 @@ function onDelete(id: number) {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background-color: var(--primary-color);
+  background-color: var(--bg-color);
   position: relative;
   padding-bottom: 200rpx;
   overflow: hidden;
@@ -293,15 +297,16 @@ function onDelete(id: number) {
 
 /* 顶部大卡片 */
 .top-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 32rpx;
   padding: 40rpx 40rpx;
   position: relative;
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.1);
+  box-shadow: 0 10rpx 30rpx var(--card-shadow);
   margin-bottom: 30rpx;
   min-height: 280rpx;
   display: flex;
   justify-content: space-between;
+  border: 1rpx solid var(--border-color);
   
   .tag {
     position: absolute;
@@ -417,11 +422,11 @@ function onDelete(id: number) {
   right: 40rpx; bottom: 80rpx;
   width: 110rpx; height: 110rpx;
   border-radius: 55rpx;
-  background: #fff;
+  background: var(--card-bg);
   color: var(--primary-color);
   font-size: 60rpx;
   display: flex; justify-content: center; align-items: center;
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.2);
+  box-shadow: 0 10rpx 30rpx var(--card-shadow);
   font-weight: 300;
   z-index: 10;
 }

@@ -1,6 +1,6 @@
 <template>
   <view class="page-root" :style="themeStore.themeStyle">
-    <view class="menu-page" :class="user.themeClass">
+    <view class="menu-page">
     <!-- 沉浸式背景图 - 仅在默认皮肤下显示 -->
     <image v-if="themeStore.currentSkinCode === 'default'" class="bg-img" :src="'/static/bg.png'" mode="aspectFill" />
 
@@ -109,7 +109,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { menuApi, requestApi, userApi, SUBSCRIBE_TEMPLATE_ID } from '@/api';
 import { useCartStore } from '@/store/cart';
 import { useUserStore } from '@/store/user';
@@ -133,6 +133,12 @@ onLoad((options) => {
     isFreeForPrincess.value = true;
     currentCardId.value = Number(options.cardId);
   }
+});
+
+onShow(() => {
+  loadAll();
+  themeStore.updateTabBarStyle();
+  themeStore.updateNavigationStyle();
 });
 
 const defaultImg = '/static/dish_placeholder.png';
@@ -293,16 +299,17 @@ page {
   box-shadow: 0 4rpx 12rpx var(--card-shadow);
 }
 .title-block .title {
-  font-size: 36rpx; font-weight: 700; color: #2c2c2c;
+  font-size: 36rpx; font-weight: 700; color: var(--text-color);
 }
 .title-block .subtitle {
-  font-size: 22rpx; color: #999; margin-top: 6rpx;
+  font-size: 22rpx; color: var(--secondary-text); margin-top: 6rpx;
 }
 .topbar-right { display: flex; gap: 16rpx; }
 .icon-btn {
   width: 64rpx; height: 64rpx; border-radius: 16rpx;
-  background: #fff; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, .04);
+  background: var(--card-bg); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2rpx 6rpx var(--card-shadow);
+  border: 1rpx solid var(--border-color);
 }
 
 /* ===== cat-bar ===== */

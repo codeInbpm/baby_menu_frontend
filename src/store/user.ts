@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useThemeStore } from './theme';
 
 interface UserInfo {
   id?: number;
@@ -63,6 +64,12 @@ export const useUserStore = defineStore('user', {
     },
   },
   getters: {
-    themeClass: (state) => (state.info?.roleInCouple === 'owner' ? 'theme-owner' : 'theme-pet'),
+    themeClass: (state) => {
+      const themeStore = useThemeStore();
+      if (themeStore.currentSkinCode !== 'default') {
+        return '';
+      }
+      return state.info?.roleInCouple === 'owner' ? 'theme-owner' : 'theme-pet';
+    },
   }
 });

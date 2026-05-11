@@ -1,6 +1,6 @@
 <template>
   <view class="page-root" :style="themeStore.themeStyle">
-    <view class="page" :class="user.themeClass">
+    <view class="page">
     <!-- 奖励动画遮罩 -->
     <view class="reward-overlay" :class="{ 'active': showRewardAnimation }">
       <!-- 梦幻光斑背景 -->
@@ -453,7 +453,11 @@ async function load() {
     checkAndPrompt();
   } catch {}
 }
-onShow(load);
+onShow(() => {
+  load();
+  themeStore.updateTabBarStyle();
+  themeStore.updateNavigationStyle();
+});
 
 function goAlbum() { uni.navigateTo({ url: '/pages/album/index' }); }
 function goMemorial() { uni.navigateTo({ url: '/pages/memorial/index' }); }
@@ -562,6 +566,9 @@ async function goSubscribe() {
 }
 
 .info { margin-left: 24rpx; flex: 1; }
+.title-block .title {
+  font-size: 36rpx; font-weight: 700; color: var(--text-color);
+}
 .name { 
   font-size: 36rpx; font-weight: 700; color: #fff; 
   display: flex; align-items: center; gap: 8rpx;
@@ -572,8 +579,8 @@ async function goSubscribe() {
   font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 8rpx;
   font-weight: normal; margin-left: 8rpx;
 }
-.role-badge.owner { background: rgba(255,255,255,0.3); }
-.role-badge.pet { background: #FF6699; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1); }
+.role-badge.owner { background: var(--glass-bg); }
+.role-badge.pet { background: var(--primary-color); box-shadow: 0 4rpx 10rpx var(--card-shadow); }
 
 .bound { font-size: 24rpx; color: #fff; margin-top: 12rpx; opacity: .95; }
 .unbound { font-size: 24rpx; color: #fff; margin-top: 12rpx; opacity: .85; }
@@ -615,9 +622,9 @@ async function goSubscribe() {
   border: 2rpx solid rgba(255,255,255,0.05);
 }
 .switch-notify.waiting {
-  background: #FCFAFA; border: 2rpx dashed #eee; box-shadow: none;
+  background: var(--bg-color); border: 2rpx dashed var(--border-color); box-shadow: none;
 }
-.switch-notify .text { font-size: 28rpx; color: #555; margin-bottom: 20rpx; }
+.switch-notify .text { font-size: 28rpx; color: var(--text-color); margin-bottom: 20rpx; opacity: 0.8; }
 .switch-notify .btn.primary {
   background: var(--gradient);
   color: #fff; font-size: 28rpx; font-weight: 600;
@@ -642,20 +649,21 @@ async function goSubscribe() {
   background-position: center;
 }
 .grid-item.album {
-  background-color: #ffe6f0;
-  animation: breathePink 4s infinite alternate;
+  background-color: var(--card-bg);
+  border: 1rpx solid var(--border-color);
+  animation: breatheBg 4s infinite alternate;
   &::before {
     content: '📸'; position: absolute; font-size: 140rpx; opacity: 0.1; right: -20rpx; bottom: -30rpx;
     animation: floatIcon 6s infinite ease-in-out alternate;
   }
 }
-@keyframes breathePink {
-  0% { background-color: #ffe6f0; }
-  100% { background-color: #ffc2d6; }
+@keyframes breatheBg {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.02); }
 }
 .grid-item.memorial {
-  background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
-  background-size: 200% 200%;
+  background: var(--card-bg);
+  border: 1rpx solid var(--border-color);
   animation: panMemorial 5s ease-in-out infinite alternate;
   &::before {
     content: '🗓️'; position: absolute; font-size: 140rpx; opacity: 0.1; left: -20rpx; top: -30rpx;
@@ -676,14 +684,16 @@ async function goSubscribe() {
 .grid-item.memorial .overlay { background: rgba(255,255,255,0.2); }
 
 .grid-item .content {
-  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; color: #fff;
+  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; color: var(--text-color);
 }
-.grid-item.memorial .content { color: #8E24AA; }
+.grid-item.memorial .content { color: var(--secondary-text); }
 
 .grid-item .icon { font-size: 48rpx; margin-bottom: 8rpx; filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.1)); }
 .grid-item .title { font-size: 30rpx; font-weight: 700; text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1); }
 .grid-item.memorial .title { text-shadow: none; }
-.grid-item .sub-title { font-size: 22rpx; opacity: 0.9; margin-top: 4rpx; }
+.grid-.title-block .subtitle {
+  font-size: 22rpx; color: var(--secondary-text); margin-top: 6rpx;
+}
 
 .menu { 
   margin: 0 32rpx;

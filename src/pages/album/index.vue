@@ -1,5 +1,6 @@
 <template>
-  <view class="page" :class="user.themeClass">
+  <view class="page-root" :style="themeStore.themeStyle">
+    <view class="page">
     <view class="bg-pattern"></view>
     
     <view class="header">
@@ -89,6 +90,7 @@
       </view>
     </wd-popup>
   </view>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -96,10 +98,12 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { albumApi } from '@/api';
 import { useUserStore } from '@/store/user';
+import { useThemeStore } from '@/store/theme';
 import { BASE_URL } from '@/utils/request';
 import dayjs from 'dayjs';
 
 const user = useUserStore();
+const themeStore = useThemeStore();
 const albums = ref<any[]>([]);
 
 // Timeline logic
@@ -314,7 +318,7 @@ function uploadSingleFile(path: string): Promise<string> {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background: #FCF4F6;
+  background: var(--bg-color);
   position: relative;
   padding-bottom: 200rpx;
   overflow-x: hidden;
@@ -352,12 +356,12 @@ function uploadSingleFile(path: string): Promise<string> {
   display: flex; align-items: center; margin-bottom: 24rpx; position: relative; z-index: 2;
   .year-dot {
     width: 36rpx; height: 36rpx; border-radius: 50%;
-    background: linear-gradient(135deg, #FF69B4, #FF1493);
-    box-shadow: 0 4rpx 12rpx rgba(255,105,180,0.4);
-    border: 6rpx solid #FCF4F6;
+    background: var(--gradient);
+    box-shadow: 0 4rpx 12rpx var(--card-shadow);
+    border: 6rpx solid var(--bg-color);
     margin-right: 20rpx;
   }
-  .year-text { font-size: 40rpx; font-weight: 800; background: linear-gradient(to right, #FF1493, #8A2BE2); -webkit-background-clip: text; color: transparent; }
+  .year-text { font-size: 40rpx; font-weight: 800; color: var(--primary-color); }
 }
 
 .months-wrap {
@@ -469,9 +473,9 @@ function uploadSingleFile(path: string): Promise<string> {
 
 .fab-btn {
   position: fixed; right: 40rpx; bottom: 80rpx; width: 110rpx; height: 110rpx; border-radius: 55rpx;
-  background: linear-gradient(135deg, #FF69B4, #FF1493); color: #fff;
+  background: var(--gradient); color: #fff;
   display: flex; justify-content: center; align-items: center;
-  box-shadow: 0 10rpx 30rpx rgba(255,105,180,0.4); z-index: 10;
+  box-shadow: 0 10rpx 30rpx var(--card-shadow); z-index: 10;
   .icon { font-size: 60rpx; font-weight: 300; }
 }
 

@@ -1,5 +1,6 @@
 <template>
-  <view class="page" :class="user.themeClass">
+  <view class="page-root" :style="themeStore.themeStyle">
+    <view class="page">
     <!-- Header background -->
     <view class="header-bg"></view>
     
@@ -7,7 +8,7 @@
       <!-- Custom Nav Bar -->
       <view class="nav-bar">
         <view class="back-btn" @click="goBack">
-          <wd-icon name="arrow-left" size="24px" color="#333" />
+          <wd-icon name="arrow-left" size="24px" color="var(--text-color)" />
         </view>
       </view>
 
@@ -119,7 +120,8 @@
 
     <!-- FAB -->
     <view class="fab-btn" @click="onAdd">
-      <wd-icon name="add" size="24px" color="#fff" />
+      <wd-icon name="add" size="24px" color="var(--primary-text-color)" />
+    </view>
     </view>
   </view>
 </template>
@@ -129,8 +131,10 @@ import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { bucketApi } from '@/api';
 import { useUserStore } from '@/store/user';
+import { useThemeStore } from '@/store/theme';
 
 const user = useUserStore();
+const themeStore = useThemeStore();
 
 const currentTab = ref(0);
 const list = ref<any[]>([]);
@@ -270,7 +274,7 @@ function getAvatar(role: string) {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background: #fdfafb;
+  background: var(--bg-color);
   position: relative;
   overflow: hidden;
 }
@@ -309,14 +313,13 @@ function getAvatar(role: string) {
   .title {
     font-size: 56rpx;
     font-weight: 900;
-    color: #333;
+    color: var(--text-color);
     display: block;
     margin-bottom: 10rpx;
-    font-family: 'Georgia', serif;
   }
   .subtitle {
     font-size: 28rpx;
-    color: #666;
+    color: var(--secondary-text);
   }
 }
 
@@ -335,7 +338,7 @@ function getAvatar(role: string) {
     transition: all 0.3s;
     
     &.active {
-      color: #333;
+      color: var(--text-color);
       font-weight: 700;
       &::after {
         content: '';
@@ -372,18 +375,19 @@ function getAvatar(role: string) {
   .filter-item {
     display: flex;
     align-items: center;
-    background: #f5f5f5;
+    background: var(--card-bg);
     padding: 8rpx 20rpx;
     border-radius: 999rpx;
     font-size: 24rpx;
-    color: #666;
+    color: var(--secondary-text);
     gap: 8rpx;
     transition: all 0.3s;
+    border: 1rpx solid var(--border-color);
     
     &.active {
-      background: #FFF0F6;
-      color: #FF6FA0;
-      border: 1rpx solid #FF6FA0;
+      background: var(--glow-color);
+      color: var(--primary-color);
+      border: 1rpx solid var(--primary-color);
     }
     
     &.clear-btn {
@@ -411,8 +415,9 @@ function getAvatar(role: string) {
   height: 280rpx;
   border-radius: 32rpx;
   overflow: hidden;
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.08);
-  background: #333; // Fallback
+  box-shadow: 0 10rpx 30rpx var(--card-shadow);
+  background: var(--card-bg);
+  border: 1rpx solid var(--border-color);
   
   .card-bg {
     position: absolute;
@@ -573,9 +578,9 @@ function getAvatar(role: string) {
   right: 40rpx; bottom: 80rpx;
   width: 110rpx; height: 110rpx;
   border-radius: 55rpx;
-  background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+  background: var(--gradient);
   display: flex; justify-content: center; align-items: center;
-  box-shadow: 0 10rpx 30rpx rgba(255,154,158,0.4);
+  box-shadow: 0 10rpx 30rpx var(--card-shadow);
   z-index: 100;
   
   &:active {
